@@ -26,6 +26,7 @@ OUT_DIR=${MAIN}/output_files										# model output files will be under $out_di
 mkdir -p ${LOC_SCRIPTS}/myRuns            # Ensure that you have a folder where myRuns are located
 mkdir -p ${LOC_SCRIPTS}/lists             # Ensure that you have a folder where lists are located
 mkdir -p ${MAIN}/output_files             # Ensure that you have a folder where outputs are located
+mkdir -p ${MAIN}/feature_files		  # Ensure that you have a folder where feature files are located
 
 ##########################################################################################################################
 ##########################################################################################################################
