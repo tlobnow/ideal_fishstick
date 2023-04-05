@@ -21,7 +21,8 @@ module load cuda/11.4
 module load nvidia-dali/gpu-cuda-11.4/
 
 ### LIBRARY & AI AVAILABILITY ################################################
-export LD_LIBRARY_PATH=/mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/lib:/mpcdf/soft/SLE_15/packages/x86_64/cuda/11.4.2/lib64
+#export LD_LIBRARY_PATH=/mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/lib:/mpcdf/soft/SLE_15/packages/x86_64/cuda/11.4.2/lib64
+export LD_LIBRARY_PATH=${ALPHAFOLD_HOME}/lib:${LD_LIBRARY_PATH}
 export TMPDIR=${JOB_SHMTMPDIR} # put temporary files into a ramdisk
 
 ### ENABLE CUDA UNIFIED MEMORY ###############################################

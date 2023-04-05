@@ -16,7 +16,7 @@ set -e
 
 module purge
 module load alphafold/2.3.0
-module load cuda/11.4
+module load tensorflow/gpu-cuda-11.4/2.7.0
 
 # include parameters common to the CPU and the GPU steps
 source 01_user_parameters.inc
