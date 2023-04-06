@@ -2,7 +2,7 @@
 
 1. Activate the environment via 
 
-        `conda activate fishy`
+        conda activate fishy
 
 2. Enter the folder containing `fasta_files`
     - supply new fasta files / folder structures
