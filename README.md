@@ -13,9 +13,6 @@
         conda activate fishy
 
 3. Clone Github repositories into your MAIN folder and run the `setup.sh` script:
-    - copies necessary packages from MPCDF AlphaFold folder (normal pip installation does not work for all necessary packages unfortunately)
-    - installs additional package networkx version into your environment
-
 
         cd
         git clone https://github.com/FreshAirTonight/af2complex.git
