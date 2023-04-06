@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -J 6_RLX
+#SBATCH -J RLX_ALL
 #SBATCH --ntasks=1
 #SBATCH --constraint="gpu"
 #
@@ -16,23 +16,26 @@
 set -e
 
 ### LOAD MODULES #############################################################
-module load anaconda/3/2021.11
+module purge
 module load cuda/11.4
-module load nvidia-dali/gpu-cuda-11.4/
+module load anaconda/3/2021.11
+
 
 ### LIBRARY & AI AVAILABILITY ################################################
-#export LD_LIBRARY_PATH=/mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/lib:/mpcdf/soft/SLE_15/packages/x86_64/cuda/11.4.2/lib64
 export LD_LIBRARY_PATH=${ALPHAFOLD_HOME}/lib:${LD_LIBRARY_PATH}
-export TMPDIR=${JOB_SHMTMPDIR} # put temporary files into a ramdisk
+# put temporary files into a ramdisk
+export TMPDIR=${JOB_SHMTMPDIR}
 
 ### ENABLE CUDA UNIFIED MEMORY ###############################################
+export TF_XLA_FLAGS=--tf_xla_enable_xla_devices
 export TF_FORCE_UNIFIED_MEMORY=1
-        # Enable jax allocation tweak to allow for larger models, note that
-        # with unified memory the fraction can be larger than 1.0 (=100% of single GPU memory):
-        # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
-        # When using 3 GPUs:
-export XLA_PYTHON_CLIENT_MEM_FRACTION=6.0
-        # run threaded tools with the correct number of threads (MPCDF customization)
+# Enable jax allocation tweak to allow for larger models, note that
+# with unified memory the fraction can be larger than 1.0 (=100% of single GPU memory):
+# https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
+# When using 3 GPUs:
+export XLA_PYTHON_CLIENT_MEM_FRACTION=4
+
+# run threaded tools with the correct number of threads (MPCDF customization)
 export NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
@@ -46,8 +49,8 @@ echo "Info: input directory of unrelaxed models is $OUT_DIR"
 echo "Info: output directory of relaxed models is $OUT_DIR"
 
 ### RUN #######################################################################
-#srun $PYTHON_PATH/python3 -u $AF_DIR/run_af2c_min.py \
-srun /mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/bin/python3 -u $AF_DIR/run_af2c_min.py \
+srun $PYTHON_PATH/python3 -u $AF_DIR/run_af2c_min.py \
   --target_lst_path=$TARGET_LST_FILE \
   --output_dir=$OUT_DIR \
   --input_dir=$OUT_DIR
+

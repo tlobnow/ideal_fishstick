@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -J 3_AF2C
+#SBATCH -J 2_AF2C
 #SBATCH --ntasks=1
 #SBATCH --constraint="gpu"
 
@@ -79,7 +79,7 @@ srun $PYTHON_PATH/python3 -u $AF_DIR/run_af2c_mod.py \
   --data_dir=$DATA_DIR \
   --output_dir=$OUT_DIR \
   --feature_dir=$FEA_DIR \
-  --model_names=model_3_multimer_v3 \
+  --model_names=model_2_multimer_v3 \
   --preset=$PRESET \
   --model_preset=$MODEL_PRESET \
   --save_recycled=$RECYCLING_SETTING \

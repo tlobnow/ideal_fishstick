@@ -1,27 +1,15 @@
-
 STOICHIOMETRY=MYD88_MOUSE:${N_A}/${FILE}:${N_B}
-	# The Stoichiometry is set up as a matrix, so it will attempt to run a [1-6]:[1-6] matrix in parameterScan.sh
+        # The Stoichiometry is set up as a matrix, so it will attempt to run a [1-6]:[1-6] matrix in parameterScan.sh
 
 OUT_NAME=MYD88_x${N_A}_${FILE}_x${N_B}
 
+# SET THE MATRIX CONDITIONS (MIN NUMBER OF MONOMERS : MAX NUMBER OF MONOMERS)
+MIN=1
+MAX=6
+
 ##########################################################################################################################
 ##########################################################################################################################
 ##########################################################################################################################
-
-# A WORD ON THE MODEL SCRIPT
-
-	# (1) prepare feature files for all fasta files
-	#	-> output in feature_files (features.pkl)
-	# (2) run the predictions (5 neural network models) 
-	#	-> output in output_files (model_*.pdb, .json)
-	# (3) run the relaxation of each model (minimizes clashes etc) 
-	#	-> output in output_files (relaxed_model_*.pdb)
-	# (4) run the R_PREP script to combine all created slurm files into one big slurm (used to extract the metric output) 
-	#	-> output in output_files (slurm.out)
-	#	-> move PKL files to designated folder
-	# (5) Let you know that everything is finished.
-
-
 
 # A WORD ON STOICHIOMETRY IN THIS PIPELINE  # taken from the AF2C Github READ.ME --> see "https://github.com/FreshAirTonight/af2complex" for more info!
 

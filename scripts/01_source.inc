@@ -1,20 +1,24 @@
-FOLDER=TEST
+#FOLDER=TEST
+FOLDER=IRAK4_IP_MS_new_signif
 
-	# Specify the folder where your fasta files are located.
-	# This folder will be used to create a list of the fasta base names, for which models will be run.
-	# Once created, you can adapt the list to batches if necessary.
+        # Specify the folder where your fasta files are located.
+        # This folder will be used to create a list of the fasta base names, for which models will be run.
+        # Once created, you can adapt the list to batches if necessary.
 
 N=1
 N_A=1
 N_B=1
-	# Specify the number of monomers in run your run: e.g. 6 would create a homohexamer
+        # Specify the number of monomers in run your run: e.g. 6 would create a homohexamer
 
-STOICHIOMETRY=MYD88_MOUSE:${N_A}/${FILE}:${N_B}
+#STOICHIOMETRY=MYD88_MOUSE:${N_A}/${FILE}:${N_B}
+STOICHIOMETRY=IRAK4_MOUSE:${N_A}/${FILE}:${N_B}
 
-OUT_NAME=MYD88_x${N_A}_${FILE}_x${N_B}
+#OUT_NAME=MYD88_x${N_A}_${FILE}_x${N_B}
+OUT_NAME=IRAK4_x${N_A}_${FILE}_x${N_B}
 
 # just for the single MyD88:XXXX runs, use above OUT_NAME setup for stoichiometry matrix setup!
-OUT_NAME=MYD88_${FILE}_x${N_B}
+#OUT_NAME=MYD88_${FILE}_x${N_B}
+OUT_NAME=IRAK4_${FILE}_x${N_B}
 
 source ./PATHS.inc
 
@@ -24,16 +28,16 @@ source ./PATHS.inc
 
 # A WORD ON THE MODEL SCRIPT
 
-	# (1) prepare feature files for all fasta files
-	#	-> output in feature_files (features.pkl)
-	# (2) run the predictions (5 neural network models) 
-	#	-> output in output_files (model_*.pdb, .json)
-	# (3) run the relaxation of each model (minimizes clashes etc) 
-	#	-> output in output_files (relaxed_model_*.pdb)
-	# (4) run the R_PREP script to combine all created slurm files into one big slurm (used to extract the metric output) 
-	#	-> output in output_files (slurm.out)
-	#	-> move PKL files to designated folder
-	# (5) Let you know that everything is finished.
+        # (1) prepare feature files for all fasta files
+        #       -> output in feature_files (features.pkl)
+        # (2) run the predictions (5 neural network models) 
+        #       -> output in output_files ($OUT_NAME_model_*.pdb, *.json in /JSON/)
+        # (3) running the relaxation of each model can minimize clashes in addition to normal modeling
+        #       -> output in output_files (relaxed_model_*.pdb)
+        # (4) run the R_PREP script to combine all created slurm files into one big slurm (used to extract the metric output) 
+        #       -> output in output_files (slurm.out)
+        #       -> move PKL files to designated folder
+        # (5) Let you know that everything is finished.
 
 
 

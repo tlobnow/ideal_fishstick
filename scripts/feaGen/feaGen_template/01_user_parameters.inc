@@ -1,4 +1,5 @@
-source ../../PATHS.inc
+#source ../../PATHS.inc
+source ~/ideal_fishstick/scripts/PATHS.inc
 source 00_user_parameters.inc
 
 FILE=$FILE

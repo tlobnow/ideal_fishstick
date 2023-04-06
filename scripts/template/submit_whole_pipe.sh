@@ -2,12 +2,12 @@
 
 set -e
 
-JOBID1=$(sbatch --parsable script2_comp_model_1.sh)
-JOBID2=$(sbatch --parsable script2_comp_model_2.sh)
-JOBID3=$(sbatch --parsable script2_comp_model_3.sh)
-JOBID4=$(sbatch --parsable script2_comp_model_4.sh)
-JOBID5=$(sbatch --parsable script2_comp_model_5.sh)
-JOBID6=$(sbatch --parsable --dependency=afterok:${JOBID1}:${JOBID2}:${JOBID3}:${JOBID4}:${JOBID5} --deadline=now+2weeks script3_relaxation.sh)
+JOBID1=$(sbatch --parsable script_model_1.sh)
+JOBID2=$(sbatch --parsable script_model_2.sh)
+JOBID3=$(sbatch --parsable script_model_3.sh)
+JOBID4=$(sbatch --parsable script_model_4.sh)
+JOBID5=$(sbatch --parsable script_model_5.sh)
+JOBID6=$(sbatch --parsable --dependency=afterok:${JOBID1}:${JOBID2}:${JOBID3}:${JOBID4}:${JOBID5} --deadline=now+2weeks script_relaxation.sh)
 
 echo "Submitted jobs"
 echo "    ${JOBID1} (PRED 1)"

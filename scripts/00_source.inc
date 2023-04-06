@@ -1,7 +1,15 @@
+#OUT_NAME=MYD88_x6_IRAK4_x4
+#STOICHIOMETRY=MYD88_MOUSE:1/Q9WUU8:6
 
-OUT_NAME=MYD88_B7ZMP1_x1
-OUT_NAME=MYD88_x1_Q9WUU8_x6
-STOICHIOMETRY=MYD88_MOUSE:1/Q9WUU8:6
+FILE=IRAK4_MOUSE
+
+N=1
+N_A=1
+N_B=1
+        # Specify the number of monomers in run your run: e.g. 6 would create a homohexamer
+
+STOICHIOMETRY=MYD88_MOUSE:${N_A}/${FILE}:${N_B}
+OUT_NAME=MYD88_x${N_A}_${FILE}_x${N_B}
 
 ##########################################################################################################################
 ##########################################################################################################################
@@ -9,17 +17,17 @@ STOICHIOMETRY=MYD88_MOUSE:1/Q9WUU8:6
 
 # A WORD ON THE MODEL SCRIPT
 
-	# If MODEL is set to "yes", the pipeline will execute MODEL.sh, so you will run some or all (depending on status):
-	# (1) prepare feature files for all fasta files
-	#	-> output in feature_files (features.pkl)
-	# (2) run the predictions (5 neural network models) 
-	#	-> output in output_files (model_*.pdb, .json)
-	# (3) run the relaxation of each model (minimizes clashes etc) 
-	#	-> output in output_files (relaxed_model_*.pdb)
-	# (4) run the R_PREP script to combine all created slurm files into one big slurm (used to extract the metric output) 
-	#	-> output in output_files (slurm.out)
-	#	-> move PKL files to designated folder
-	# (5) Let you know that everything is finished.
+        # If MODEL is set to "yes", the pipeline will execute MODEL.sh, so you will run some or all (depending on status):
+        # (1) prepare feature files for all fasta files
+        #       -> output in feature_files (features.pkl)
+        # (2) run the predictions (5 neural network models) 
+        #       -> output in output_files (model_*.pdb, .json)
+        # (3) run the relaxation of each model (minimizes clashes etc) 
+        #       -> output in output_files (relaxed_model_*.pdb)
+        # (4) run the R_PREP script to combine all created slurm files into one big slurm (used to extract the metric output) 
+        #       -> output in output_files (slurm.out)
+        #       -> move PKL files to designated folder
+        # (5) Let you know that everything is finished.
 
 
 

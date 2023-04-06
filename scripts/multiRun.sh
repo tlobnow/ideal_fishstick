@@ -22,19 +22,20 @@ LIST=${LOC_LISTS}/${FOLDER}_inds
 
 while read -r LINE
 do
-	FOUND="$(find ${LOC_SCRIPTS}/myRuns/ -name "$LINE" -print -quit)"
-	if [ "x$FOUND" != "x" ]
-	then
-		echo "Working on $LINE"
-	else
-		for i in ${LOC_FASTA}/${FOLDER}/*.fasta; do 
-			# copy template folder, create a new folder named as the new file with template content
-			cp -r ${LOC_SCRIPTS}/template ${LOC_SCRIPTS}/myRuns/$(basename -a -s .fasta $i)
-			# if the template folder was copied into the folder by mistake, remove it:
-			[ -f ${LOC_SCRIPTS}/myRuns/$(basename -a -s .fasta $i)/template ] && rm -r ${LOC_SCRIPTS}/myRuns/$(basename -a -s .fasta $i)/template ; done
-		# copy fasta files from the designated folder into the main fasta folder:
-		cp ${LOC_FASTA}/${FOLDER}/*.fasta ${LOC_FASTA}
-	fi
+        FOUND="$(find ${LOC_SCRIPTS}/myRuns/ -name "$LINE" -print -quit)"
+        if [ "x$FOUND" != "x" ]
+        then
+                echo "Working on $LINE"
+				[ -f ${LOC_SCRIPTS}/myRuns/${LINE}/template ] && rm -r ${LOC_SCRIPTS}/myRuns/${LINE}/template 
+        else
+                for i in ${LOC_FASTA}/${FOLDER}/*.fasta; do 
+                        # copy template folder, create a new folder named as the new file with template content
+                        cp -r ${LOC_SCRIPTS}/template ${LOC_SCRIPTS}/myRuns/$(basename -a -s .fasta $i)
+                        # if the template folder was copied into the folder by mistake, remove it:
+                        [ -f ${LOC_SCRIPTS}/myRuns/$(basename -a -s .fasta $i)/template ] && rm -r ${LOC_SCRIPTS}/myRuns/$(basename -a -s .fasta $i)/template ; done
+                # copy fasta files from the designated folder into the main fasta folder:
+                cp ${LOC_FASTA}/${FOLDER}/*.fasta ${LOC_FASTA}
+        fi
 done <$LIST
 
 

@@ -18,7 +18,7 @@ module purge
 module load anaconda/3/2021.11
 
 # include parameters common to the CPU and the GPU steps
-source 01_user_parameters.inc
+source ./01_user_parameters.inc
 
 # check if the directories set by the alphafold module do exist
 if [ ! -d ${ALPHAFOLD_DATA} ]; then

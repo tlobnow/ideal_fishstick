@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source PATHS.inc
+source ./PATHS.inc
 #source 00_source.inc
 
 for i in $LOC_FASTA/*.fasta; do
