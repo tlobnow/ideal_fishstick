@@ -1,5 +1,32 @@
 # ideal_fishstick
 
+**FIRST TIME SETUP:**
+
+(You should have miniconda installed already)
+
+1. Create the new environment you will work in:
+
+        conda create --name fishy python=3.8
+
+2. Activate the environment via
+
+        conda activate fishy
+
+3. Clone Github repositories into your MAIN folder and run the `setup.sh` script:
+    - copies necessary packages from MPCDF AlphaFold folder (normal pip installation does not work for all necessary packages unfortunately)
+    - installs additional package networkx version into your environment
+
+
+        cd
+        git clone https://github.com/FreshAirTonight/af2complex.git
+        git clone https://github.com/tlobnow/ideal_fishstick.git
+        cd ideal_fishstick
+        ./setup.sh
+
+
+
+**AFTER FIRST SETUP - FOR EVERY NORMAL SESSION**
+
 1. Activate the environment via 
 
         conda activate fishy
@@ -7,7 +34,7 @@
 2. Enter the folder containing `fasta_files`
     - supply new fasta files / folder structures
     - take a look at the existing test files
-    - IMPORTANT: You can create folders containing files, but only fasta files in the main folder will be prepared.
+    - **IMPORTANT**: You can create folders containing files, but only fasta files in the main folder will be prepared.
     - To make sure everything is prepared, simply copy all fasta files into the main fasta_files directory as well
 
 3. Enter the `scripts` folder
@@ -34,7 +61,7 @@
         - e.g. I want all complexes to be modeled against 4xMyD88 -> OUT_NAME=MYD88_x4_${FILE}_x1
         - ${FILE} will be replaced by each of the files in your designated folder
         - Start the runs with `./multiRun.sh` (this script prompts execution of `oneRun.sh` and iterates over files in your designated folder)
-        - IMPORTANT: By default, the script will run all possible modeling scripts.
+        - **IMPORTANT**: By default, the script will run all possible modeling scripts.
         - If the model has not finished yet, but the slurm job is already running, the script will start another job (we don't want that)
         - To avoid this behaviour, simply open `oneRun.sh` and change MODE to 2
         - This will only allow processing of your files, no new job submission
