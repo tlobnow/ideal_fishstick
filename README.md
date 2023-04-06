@@ -1,6 +1,6 @@
-# ideal_fishstick
+# PIPELINE FOR PROTEIN COMPLEX PREDICTION ON THE MPCDF RAVEN CLUSTER
 
-**FIRST TIME SETUP:**
+## FIRST TIME SETUP
 
 (You should have miniconda installed already)
 
@@ -22,7 +22,7 @@
 
 
 
-**AFTER FIRST SETUP - FOR EVERY NORMAL SESSION**
+## FOR EVERY NORMAL SESSION
 
 1. Activate the environment via 
 
