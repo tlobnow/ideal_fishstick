@@ -9,9 +9,13 @@
 
         conda create --name fishy python=3.8
 
+
 2. Activate the environment via
 
         conda activate fishy
+
+    To automatically activate the environment at login, you can add `conda activate fishy` to your `~/.bashrc` file (open the file, paste it) - At each new login, the `fishy` environment will already be preloaded.
+
 
 3. Clone Github repositories into your MAIN folder and run the `setup.sh` script:
 
