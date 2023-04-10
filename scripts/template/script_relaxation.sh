@@ -18,8 +18,8 @@ set -e
 ### LOAD MODULES #############################################################
 module purge
 module load cuda/11.4
-module load anaconda/3/2021.11
-
+#module load anaconda/3/2021.11
+module load alphafold/2.3.0
 
 ### LIBRARY & AI AVAILABILITY ################################################
 export LD_LIBRARY_PATH=${ALPHAFOLD_HOME}/lib:${LD_LIBRARY_PATH}

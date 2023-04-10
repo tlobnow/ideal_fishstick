@@ -1,7 +1,7 @@
 ## Set user parameters for alphafold, common to MSA and prediction jobs
 
 source ../../PATHS.inc
-source ../../00_source.inc
+source ../../01_source.inc
 source ./00_user_parameters.inc
 
 ## PRESET SETTINGS #####################################################
@@ -47,14 +47,14 @@ MSA_PAIRING=all         #pairing as many as possible, the most dense complex MSA
 ## FEATURE MODE ###########################################################
 ### There are three feature_mode to choose from:
 
-#FEATURE_MODE='monomer+species'
+FEATURE_MODE='monomer+species'
         ### monomer+species Modified monomer data pipeline to include additionally species information.
         ### We recommend that you use this mode, which enables a flexibility
         ### using either unpaired MSAs or paired MSAs in various paring modes available in AF2Complex v1.3.0.
         ### The monomer features generated with these two monomer modes
         ### can be used to predict arbitrary combinations of the monomers for modeling a multimeric target.
 
-FEATURE_MODE='monomer+fullpdb'
+#FEATURE_MODE='monomer+fullpdb'
                 ### monomer+fullpdb In addition to add the species information, the template search uses the template pipeline 
                 ### employed for predicting multimers, instead of using the original monomer template pipeline. 
                 ### The advantage is that this template search covers the full PDB library.

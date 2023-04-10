@@ -1,26 +1,46 @@
-#FOLDER=TEST
-FOLDER=IRAK4_IP_MS_new_signif
+RUN=MULTI		# executes multiRun.sh that iterates over oneRun.sh
+#RUN=SCAN		# executes stoichiometry scans via parameterScan.sh
 
-        # Specify the folder where your fasta files are located.
-        # This folder will be used to create a list of the fasta base names, for which models will be run.
-        # Once created, you can adapt the list to batches if necessary.
+if [ "$RUN" = "MULTI" ]; then
+	FOLDER=TEST
+			# Specify the folder where your fasta files are located.
+			# Folder will be used to create a list of the fasta base names, for which models will be run.
 
-N=1
-N_A=1
-N_B=1
-        # Specify the number of monomers in run your run: e.g. 6 would create a homohexamer
+	FILE_A=MYD88
+	
+	# SET THE STOICHIOMETRY
+	#N=1
+	N_A=1
+	N_B=1
+	STOICHIOMETRY=${FILE_A}_MOUSE:${N_A}/${FILE}:${N_B}
+        
+	# SET THE OUTPUT NAME
+	#OUT_NAME=${FILE_A}_x${N_A}_${FILE}_x${N_B}	# standard OUT_NAME
+	OUT_NAME=${FILE_A}_${FILE}_x${N_B}		# single MyD88:XXXX runs
 
-#STOICHIOMETRY=MYD88_MOUSE:${N_A}/${FILE}:${N_B}
-STOICHIOMETRY=IRAK4_MOUSE:${N_A}/${FILE}:${N_B}
+elif [ "$RUN" = "SCAN" ]; then
+	
+	# PROVIDE PARTNER A (MONOMER I) IN MATRIX SETUP
+	FILE_A=MYD88_MOUSE
+	
+	# PROVIDE PARTNER B (MONOMER II) IN MATRIX SETUP
+	FILE=IRAK4_MOUSE
 
-#OUT_NAME=MYD88_x${N_A}_${FILE}_x${N_B}
-OUT_NAME=IRAK4_x${N_A}_${FILE}_x${N_B}
+	# SET THE STOICHIOMETRY
+	STOICHIOMETRY=${FILE_A}:${N_A}/${FILE}:${N_B}
+	
+	# SET THE OUTPUT NAME
+	OUT_NAME=MYD88_x${N_A}_${FILE}_x${N_B}
 
-# just for the single MyD88:XXXX runs, use above OUT_NAME setup for stoichiometry matrix setup!
-#OUT_NAME=MYD88_${FILE}_x${N_B}
-OUT_NAME=IRAK4_${FILE}_x${N_B}
+	# SET THE MIN AND MAX NUMBER OF MONOMERS FOR THE MATRIX SETUP
+	MIN=1
+	MAX=6
 
-source ./PATHS.inc
+else
+	echo "PLEASE SPECIFY THE RUN MODE."
+fi
+
+source ~/ideal_fishstick/scripts/PATHS.inc
 
 ##########################################################################################################################
 ##########################################################################################################################
