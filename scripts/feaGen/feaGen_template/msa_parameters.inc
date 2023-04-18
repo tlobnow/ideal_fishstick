@@ -1,5 +1,6 @@
 #source ../../PATHS.inc
 source ~/ideal_fishstick/scripts/PATHS.inc
+source ~/ideal_fishstick/scripts/01_source.inc
 source 00_user_parameters.inc
 
 FILE=$FILE
@@ -13,6 +14,9 @@ OUTPUT_DIR=${MAIN}/feature_files/
 # Preset for alphafold, passed via --db_preset
 #PRESET="full_dbs"
 PRESET="reduced_dbs"
+
+## MAX TEMPLATE DATE ######################################################
+MAX_TEMPLATE_DATE=2020-05-15
 
 PYTHON_PATH=~/miniconda3/envs/fishy/bin
 AF_DIR=~/af2complex/src

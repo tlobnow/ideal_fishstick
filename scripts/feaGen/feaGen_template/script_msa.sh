@@ -16,9 +16,9 @@ set -e
 
 module purge
 module load anaconda/3/2021.11
+#module load alphafold/2.3.0
 
-# include parameters common to the CPU and the GPU steps
-source ./01_user_parameters.inc
+source ./msa_parameters.inc
 
 # check if the directories set by the alphafold module do exist
 if [ ! -d ${ALPHAFOLD_DATA} ]; then
@@ -104,7 +104,7 @@ srun /mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/bin/python3 -u $AF_DIR/r
         --uniprot_database_path=${uniprot_database_path} \
         --pdb70_database_path=${pdb70_database_path} \
         --template_mmcif_dir=${template_mmcif_dir} \
-        --max_template_date=$(date +"%Y-%m-%d") \
+        --max_template_date=${MAX_TEMPLATE_DATE} \
         --obsolete_pdbs_path=${obsolete_pdbs_path} \
         --hhblits_binary_path=${TOOL_DIR}/hhblits   \
         --hhsearch_binary_path=${TOOL_DIR}/hhsearch \
@@ -115,5 +115,94 @@ srun /mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/bin/python3 -u $AF_DIR/r
         --feature_mode='monomer+species' \
         --use_precomputed_msas=True
 
+
+#if [ "$FEATURE_MODE" = "multimer" ]; then
+#	srun /mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/bin/python3 -u $AF_DIR/run_af2c_fea.py \
+#		--output_dir="${OUTPUT_DIR}" \
+#		--fasta_paths="${FASTA_PATHS}" \
+#		--db_preset="${PRESET}" \
+#		--data_dir=/raven/ri/public_sequence_data/alphafold2/git-v2.3.0/data \
+#		--uniprot_database_path=${uniprot_database_path} \
+#		--uniref90_database_path=${uniref90_database_path} \
+#		--mgnify_database_path=${mgnify_database_path}   \
+#		--pdb_seqres_database_path=${pdb_seqres_database_path} \
+#		--small_bfd_database_path=${small_bfd_database_path} \
+#		--template_mmcif_dir=${template_mmcif_dir}  \
+#		--max_template_date=${MAX_TEMPLATE_DATE} \ 
+#		--obsolete_pdbs_path=${obsolete_pdbs_path} \
+#		--hhblits_binary_path=$TOOL_DIR/hhblits   \
+#		--hhsearch_binary_path=$TOOL_DIR/hhsearch \
+#		--jackhmmer_binary_path=$TOOL_DIR/jackhmmer \
+#		--hmmsearch_binary_path=$TOOL_DIR/hmmsearch \
+#		--hmmbuild_binary_path=$TOOL_DIR/hmmbuild \
+#		--kalign_binary_path=$KALIGN \
+#		--feature_mode="multimer"  \
+#		--use_precomputed_msas=True    
+#elif [ "$FEATURE_MODE" = "monomer+fullpdb" ]; then
+#	srun /mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/bin/python3 -u $AF_DIR/run_af2c_fea.py \
+#		--output_dir="${OUTPUT_DIR}" \
+#		--fasta_paths="${FASTA_PATHS}" \
+#		--db_preset="${PRESET}" \
+#		--data_dir=/raven/ri/public_sequence_data/alphafold2/git-v2.3.0/data \
+#		--uniprot_database_path=${uniprot_database_path} \
+#		--uniref90_database_path=${uniref90_database_path} \
+#		--mgnify_database_path=${mgnify_database_path}   \
+#		--pdb_seqres_database_path=${pdb_seqres_database_path} \
+#		--small_bfd_database_path=${small_bfd_database_path} \
+#		--template_mmcif_dir=${template_mmcif_dir}  \
+#		--max_template_date=${MAX_TEMPLATE_DATE} \ 
+#		--obsolete_pdbs_path=${obsolete_pdbs_path} \
+#		--hhblits_binary_path=$TOOL_DIR/hhblits   \
+#		--hhsearch_binary_path=$TOOL_DIR/hhsearch \
+#		--jackhmmer_binary_path=$TOOL_DIR/jackhmmer \
+#		--hmmsearch_binary_path=$TOOL_DIR/hmmsearch \
+#		--hmmbuild_binary_path=$TOOL_DIR/hmmbuild \
+#		--kalign_binary_path=$KALIGN \
+#		--feature_mode="monomer+fullpdb"  \
+#		--use_precomputed_msas=True  
+#elif [ "$FEATURE_MODE" = "monomer+species" ]; then
+#	srun /mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/bin/python3 -u $AF_DIR/run_af2c_fea.py \
+#		--output_dir="${OUTPUT_DIR}" \
+#		--fasta_paths="${FASTA_PATHS}" \
+#		--db_preset="${PRESET}" \
+#		--data_dir=/raven/ri/public_sequence_data/alphafold2/git-v2.3.0/data \
+#		--uniprot_database_path=${uniprot_database_path} \
+#		--uniref90_database_path=${uniref90_database_path} \
+#		--mgnify_database_path=${mgnify_database_path}   \
+#		--small_bfd_database_path=${small_bfd_database_path} \
+#		--pdb70_database_path=${pdb70_database_path} \
+#		--template_mmcif_dir=${template_mmcif_dir}  \
+#		--max_template_date=${MAX_TEMPLATE_DATE} \ 
+#		--obsolete_pdbs_path=${obsolete_pdbs_path} \
+#		--hhblits_binary_path=$TOOL_DIR/hhblits   \
+#		--hhsearch_binary_path=$TOOL_DIR/hhsearch \
+#		--jackhmmer_binary_path=$TOOL_DIR/jackhmmer \
+#		--hmmsearch_binary_path=$TOOL_DIR/hmmsearch \
+#		--hmmbuild_binary_path=$TOOL_DIR/hmmbuild \
+#		--kalign_binary_path=$KALIGN \
+#		--feature_mode="monomer+species" \
+#		--use_precomputed_msas=True 
+#else
+#	srun /mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/bin/python3 -u $AF_DIR/run_af2c_fea.py \
+#		--output_dir="${OUTPUT_DIR}" \
+#		--fasta_paths="${FASTA_PATHS}" \
+#		--db_preset="${PRESET}" \
+#		--data_dir=/raven/ri/public_sequence_data/alphafold2/git-v2.3.0/data \
+#		--uniref90_database_path=${uniref90_database_path} \
+#		--mgnify_database_path=${mgnify_database_path}   \
+#		--small_bfd_database_path=${small_bfd_database_path} \
+#		--pdb70_database_path=${pdb70_database_path} \
+#		--template_mmcif_dir=${template_mmcif_dir}  \
+#		--max_template_date=${MAX_TEMPLATE_DATE} \ 
+#		--obsolete_pdbs_path=${obsolete_pdbs_path} \
+#		--hhblits_binary_path=$TOOL_DIR/hhblits   \
+#		--hhsearch_binary_path=$TOOL_DIR/hhsearch \
+#		--jackhmmer_binary_path=$TOOL_DIR/jackhmmer \
+#		--hmmsearch_binary_path=$TOOL_DIR/hmmsearch \
+#		--hmmbuild_binary_path=$TOOL_DIR/hmmbuild \
+#		--kalign_binary_path=$KALIGN \
+#		--feature_mode=$FEATURE_MODE \
+#		--use_precomputed_msas=True 
+#fi
 
 

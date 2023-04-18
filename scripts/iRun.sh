@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-### SET MAIN INFO ################################
-
-STOICHIOMETRY=MYD88_MOUSE:1/IRAK4_MOUSE:1
-OUT_NAME=MYD88_IRAK4_MOUSE_x1
-
 ### SELECT #######################################
 EXTENDED_VIEW=FALSE #TRUE
 
@@ -12,7 +7,7 @@ FORCE_PRED=FALSE
 FORCE_RLX=FALSE
 
 MODE=1
-MODE=2
+#MODE=2
 
 # MODE 1: Start Everything (Modeling / Rlx / Processing)
 # MODE 2: Start Progress Report (no new jobs submitted)
@@ -43,9 +38,8 @@ PREDICTION_TICKER=0
 ##################################################
 
 CONTINUE=TRUE # BY DEFAULT FALSE, FIRST CHECK FOR MSA
+source ./01_source.inc
 source ./PATHS.inc
-#source ./01_source.inc
-
 
 if [ "$CONTINUE" = "TRUE" ]; then
 

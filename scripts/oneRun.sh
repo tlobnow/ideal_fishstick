@@ -90,11 +90,14 @@ fi
 
 if [ "$CONTINUE" = "TRUE" ]; then
 
-		### COPY THE TEMPLATE FOLDER TO CREATE A DIRECTORY FOR THIS RUN
-		[ -f ${LOC_SCRIPTS}/myRuns/${FILE} ] || cp -r ${LOC_SCRIPTS}/template ${LOC_SCRIPTS}/myRuns/${FILE}
+	### COPY THE TEMPLATE FOLDER TO CREATE A DIRECTORY FOR THIS RUN
+	[ -f ${LOC_SCRIPTS}/myRuns/${FILE} ] || cp -r ${LOC_SCRIPTS}/template ${LOC_SCRIPTS}/myRuns/${FILE}
 
-		### ENTER SCRIPTS FOLDER
+	### ENTER SCRIPTS FOLDER
         cd ${LOC_SCRIPTS}/myRuns/${FILE}
+
+	### REMOVE DUPLICATE TEMPLATE FOLDER IF FOUND
+	if [ -d ${LOC_SCRIPTS}/myRuns/${FILE}/template ]; then  rm -Rf ${LOC_SCRIPTS}/myRuns/${FILE}/template; fi
 
         ### SET FILE NAME IN USER PARAMETERS
         echo FILE=${FILE}  > 00_user_parameters.inc
@@ -219,7 +222,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 					if [ $MODE -eq 1 -o $MODE -eq 5 ]; then
 						JOBID1=$(sbatch --parsable script_relaxation.sh)
 						echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
-						echo "NO RELAXATION STEP FOR NOW."
+						#echo "NO RELAXATION STEP FOR NOW."
 					else
 						echo -e "${RED}(3) NO SUBMISSION OF RELAXATION JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
 						#echo "NO RELAXATION STEP FOR NOW."
@@ -233,7 +236,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				if [ $MODE -eq 1 -o $MODE -eq 5 ]; then
 					JOBID1=$(sbatch --parsable script_relaxation.sh)
 					echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
-					echo "NO RELAXATION STEP FOR NOW."
+					#echo "NO RELAXATION STEP FOR NOW."
 				else
 					echo -e "${RED}(3) NO SUBMISSION OF RELAXATION JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
 					#echo "NO RELAXATION STEP FOR NOW."
@@ -281,7 +284,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 						#echo "NO RELAXATION STEP FOR NOW."
 					else
 						echo -e "${RED}(3) NO SUBMISSION OF RELAXATION JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
-						echo "NO RELAXATION STEP FOR NOW."
+						#echo "NO RELAXATION STEP FOR NOW."
 					fi
 					RELAXATION_STATUS="FAIL"
 				fi

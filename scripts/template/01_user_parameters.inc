@@ -4,6 +4,8 @@ source ../../PATHS.inc
 source ../../01_source.inc
 source ./00_user_parameters.inc
 
+if [ "$RUN" = "SCAN" ]; then source ./target.inc; fi
+
 ## PRESET SETTINGS #####################################################
 ### run preset, note this is different from model_preset defined below
 ### This preset defined the number of recycles, ensembles, MSA cluster sizes (for monomer_ptm models)

@@ -19,8 +19,8 @@ PYTHON_PATH=~/miniconda3/envs/fishy/bin
 AF_DIR=~/af2complex/src
 AF2_DIR=/mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0
 DATA_DIR=/raven/ri/public_sequence_data/alphafold2/git-v2.3.0/data/
-TARGET_LST_FILE=$LOC_SCRIPTS/myRuns/$FILE/target.lst                 # a list of target with stoichiometry
-FEA_DIR=$LOC_FEATURES                                                # input feature pickle files of individual monomers under $INP_DIR/$monomer
+TARGET_LST_FILE=${LOC_SCRIPTS}/myRuns/$FILE/target.lst                 # a list of target with stoichiometry
+FEA_DIR=${LOC_FEATURES}                                                # input feature pickle files of individual monomers under $INP_DIR/$monomer
 OUT_DIR=${MAIN}/output_files                                         # model output files will be under $out_dir/$target
 
 mkdir -p ${LOC_SCRIPTS}/myRuns            # Ensure that you have a folder where myRuns are located

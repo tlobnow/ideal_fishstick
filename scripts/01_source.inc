@@ -1,47 +1,59 @@
+#RUN=SINGLE		# executes iRun.sh for simple (single) runs
 RUN=MULTI		# executes multiRun.sh that iterates over oneRun.sh
 #RUN=SCAN		# executes stoichiometry scans via parameterScan.sh
 
-if [ "$RUN" = "MULTI" ]; then
+if [ "$RUN" = "SINGLE" ]; then
+	
+	# SET THE STOICHIOMETRY
+	#STOICHIOMETRY=MYD88_MOUSE:1/IRAK4_MOUSE:1
+
+	#STOICHIOMETRY=T1065s1/T1065s2
+	#STOICHIOMETRY=T1072s1:2/T1072s2:2
+	#STOICHIOMETRY=T1065s1/T1065s2+T1072s1:2/T1072s2:2
+	#STOICHIOMETRY=T1060s3:12
+	STOICHIOMETRY=INS_HUMAN:2
+
+	# SET THE OUTPUT NAME
+	#OUT_NAME=MYD88_IRAK4_MOUSE_x1
+	#OUT_NAME=H1065
+	#OUT_NAME=H1072
+	#OUT_NAME=H1072_H1065
+	#OUT_NAME=H1060v4
+	OUT_NAME=INS_HUMAN_x2
+
+elif [ "$RUN" = "MULTI" ]; then
+
 	FOLDER=TEST
+	FOLDER=IRAK4_IP_MS_new_signif
 			# Specify the folder where your fasta files are located.
 			# Folder will be used to create a list of the fasta base names, for which models will be run.
 
 	FILE_A=MYD88
 	
 	# SET THE STOICHIOMETRY
-	#N=1
 	N_A=1
 	N_B=1
 	STOICHIOMETRY=${FILE_A}_MOUSE:${N_A}/${FILE}:${N_B}
-        
+
 	# SET THE OUTPUT NAME
 	#OUT_NAME=${FILE_A}_x${N_A}_${FILE}_x${N_B}	# standard OUT_NAME
 	OUT_NAME=${FILE_A}_${FILE}_x${N_B}		# single MyD88:XXXX runs
-
+	
 elif [ "$RUN" = "SCAN" ]; then
 	
-	# PROVIDE PARTNER A (MONOMER I) IN MATRIX SETUP
-	FILE_A=MYD88_MOUSE
+	FILE_A=MYD88
+	FILE=IRAK4
 	
-	# PROVIDE PARTNER B (MONOMER II) IN MATRIX SETUP
-	FILE=IRAK4_MOUSE
-
-	# SET THE STOICHIOMETRY
-	STOICHIOMETRY=${FILE_A}:${N_A}/${FILE}:${N_B}
-	
-	# SET THE OUTPUT NAME
-	OUT_NAME=MYD88_x${N_A}_${FILE}_x${N_B}
-
-	# SET THE MIN AND MAX NUMBER OF MONOMERS FOR THE MATRIX SETUP
-	MIN=1
-	MAX=6
+	# OUT_NAME AND STOICHIOMETRY STRUCTURE CAN BE CHANGED INSIDE multiRun.sh
+	# CURRENT OUT_NAME STRUCTURE IS ${FILE_A}_x${N_A}_${FILE}_x${N_B
+        # CURRENT STOICHIOMETRY STRUCTURE IS ${FILE_A}:${N_A}/${FILE}:${N_B}
+        # The Stoichiometry is set up as a matrix, will by default attempt to run a [1-4]:[1-4] matrix via multiRun.sh iterating over parameterScan.sh
 
 else
 	echo "PLEASE SPECIFY THE RUN MODE."
 fi
 
 source ~/ideal_fishstick/scripts/PATHS.inc
-
 ##########################################################################################################################
 ##########################################################################################################################
 ##########################################################################################################################
