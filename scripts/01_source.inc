@@ -1,4 +1,4 @@
-#RUN=SINGLE		# executes iRun.sh for simple (single) runs
+RUN=SINGLE		# executes iRun.sh for simple (single) runs
 RUN=MULTI		# executes multiRun.sh that iterates over oneRun.sh
 #RUN=SCAN		# executes stoichiometry scans via parameterScan.sh
 
@@ -11,7 +11,12 @@ if [ "$RUN" = "SINGLE" ]; then
 	#STOICHIOMETRY=T1072s1:2/T1072s2:2
 	#STOICHIOMETRY=T1065s1/T1065s2+T1072s1:2/T1072s2:2
 	#STOICHIOMETRY=T1060s3:12
-	STOICHIOMETRY=INS_HUMAN:2
+	#STOICHIOMETRY=INS_HUMAN:2
+	#STOICHIOMETRY=IRAK4_MOUSE:1/IRAK1_MOUSE:1
+	#STOICHIOMETRY=MYD88_MOUSE-DD:4/IRAK4_MOUSE-DD:4
+	#STOICHIOMETRY=ARL8B_MOUSE:1/UN93B_MOUSE:1
+	#STOICHIOMETRY=MYD88_MOUSE-DD:6/IRAK4_MOUSE-DD:4/IRAK1_MOUSE-DD:4
+	STOICHIOMETRY=IRAK4_MOUSE-DD:4/IRAK1_MOUSE-DD:4	
 
 	# SET THE OUTPUT NAME
 	#OUT_NAME=MYD88_IRAK4_MOUSE_x1
@@ -20,15 +25,25 @@ if [ "$RUN" = "SINGLE" ]; then
 	#OUT_NAME=H1072_H1065
 	#OUT_NAME=H1060v4
 	OUT_NAME=INS_HUMAN_x2
+	OUT_NAME=IRAK4_IRAK1_x1
+	OUT_NAME=MYD88_x4_IRAK4_x4
+	OUT_NAME=ARL8B_MOUSE_x1_UN93B_MOUSE_x1
+	OUT_NAME=MYD88_DD_x6_IRAK4_DD_x4_IRAK1_DD_x4
+	OUT_NAME=IRAK4_MOUSE_DD_x4_IRAK1_MOUSE_DD_x4
 
 elif [ "$RUN" = "MULTI" ]; then
 
-	FOLDER=TEST
-	FOLDER=IRAK4_IP_MS_new_signif
+	#FOLDER=TEST
+	#FOLDER=IRAK4_IP_MS_new_signif
+	#FOLDER=IRAK1_IP_MS_new_signif
+	FOLDER=MYD88_Protein.IDs_signif
+
 			# Specify the folder where your fasta files are located.
 			# Folder will be used to create a list of the fasta base names, for which models will be run.
 
 	FILE_A=MYD88
+	#FILE_A=IRAK4
+	#FILE_A=IRAK1
 	
 	# SET THE STOICHIOMETRY
 	N_A=1
