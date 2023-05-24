@@ -8,30 +8,27 @@
         curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 
 
-2. Install Miniconda on your account (follow instructions and type yes for additional package installations)
+2. Install Miniconda on your account (make the script executable `chmod +x` and run the script
 
-	# make the downloaded script executable
-	chmod + x Miniconda3-latest-Linux-x86_64.sh
-
-	# install
-    ./Miniconda3-latest-Linux-x86_64.sh
+        chmod + x Miniconda3-latest-Linux-x86_64.sh
+        ./Miniconda3-latest-Linux-x86_64.sh
 
 
 3. Create a new environment you will work in:
 
-    conda create --name fishy python=3.8
+        conda create --name fishy python=3.8
 
 
 4. Activate the environment via
 
-    conda activate fishy
+        conda activate fishy
 
     To automatically activate the environment at login, you can add `conda activate fishy` to your `~/.bashrc` file (open the file, paste it) - At each new login, the `fishy` environment will already be preloaded.
 
 
 5. Clone Github repositories into your MAIN folder and run the `setup.sh` script:
 
-        cd
+        cd ~
         git clone https://github.com/FreshAirTonight/af2complex.git
         git clone https://github.com/tlobnow/ideal_fishstick.git
         cd ideal_fishstick
@@ -78,19 +75,19 @@
             - Set desired output name structure
             - e.g. If you want all complexes to be modeled against 2xMyD88 -> OUT_NAME=MYD88_x2_${FILE}_x1
             - ${FILE} will be replaced by each of the files in your designated folder
-            - **IMPORTANT**: By default, the script will run all possible modeling scripts.
+            - **IMPORTANT**: By default, the script will run all remaining modeling scripts.
                 - If the model has not finished yet, but the slurm job is already running, the script will start another job (we don't want that)
                 - To avoid this behaviour, simply open `MULTI.sh` and change MODE to 2
                 - This will only allow processing of your files, no new job submission
-        - Run two proteins in a matrix-like setup (= parameter scan) to check for stoichiometric ratios
+        - Run two proteins in a matrix-like setup (= parameter scan) to check for stoichiometric relationships
             - Change run setting to `RUN=MATRIX`
             - Set the monomers you wish to run in the setup (FILE_A and FILE)
             - To adjust additional matrix options, open the `MATRIX.sh`:
                 - Adjust the desired output name structure
                 - Adjust the desired min/max number of monomers you wish to check
-                    - e.g. MIN=1, MAX=6 will run all 6x6=36 combinatory possibilities
+                    - e.g. MIN=1, MAX=6 will run all 6x6=36 combinations
                     - it depends on monomer length how many can be predicted
-                    - at some point the complexes will be too complex to finish within the 24hr slurm job limit
+                    - at some point the models will be too complex to finish within the 24hr slurm job limit
 
 7. Start runs and submit jobs:
 	- The script will execute the appropriate run option
@@ -98,11 +95,11 @@
         ./main.sh
 
 8. While the slurm jobs are running:
+    - check progress of running jobs --> as described in (4.)
     - check which jobs have successfully finished or are still outstanding per run folder:
         - change MODE in each respective run script (SINGLE.sh, MULTI.sh, MATRIX.sh) to `MODE=2`
         - this will prevent submission of new jobs
-        - DO NOT FORGET TO CHANGE BACK TO MODE=1 to allow new job submissions
-    - check progress of running jobs --> as described in (4.)
+        - Change the mode back to MODE=1 to submit new jobs
 
 9. Once the model predictions have finished:
     - You can restart the script (SINGLE.sh, main.sh, or MATRIX.sh), to:
