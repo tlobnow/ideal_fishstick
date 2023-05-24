@@ -30,7 +30,6 @@
         ./setup.sh
 
 
-
 ### FOR EVERY NORMAL SESSION
 
 1. Activate the environment and update scripts:
@@ -39,21 +38,25 @@
         cd ideal_fishstick
         git pull
 
+
 2. Enter the folder containing `fasta_files`:
     - Add new fasta files or folders
     - Only fasta files in the main folder will be prepared
     - Copy all fasta files into the main `fasta_files` directory for preparation
 
+
 3. Enter the `scripts` folder and run the `prepYourFeatures.sh` script:
 
         ./prepYourFeatures.sh
+
 
 4. Supervise the progress of slurm jobs:
     - Use `check_squeue.sh` to view currently running jobs (refreshes every 10 seconds)
     - Use `squeue.sh` to view currently running jobs without refreshing
 
+
 5. Check the `feature_files` folder:
-    - Each prepared fasta should have a folder containing a features.pkl file
+    - Each prepared fasta should have a folder containing a `features.pkl` file
 
 
 6. Choose one of the following run options:
@@ -76,11 +79,13 @@
 
         ./main.sh
 
+
 8. While the slurm jobs are running:
     - Check progress of running jobs as described in step 4.
     - Check finished or outstanding jobs per run folder:
         - Change `MODE` in each respective run script (`SINGLE.sh`, `MULTI.sh`, `MATRIX.sh`) to `MODE=2`.
         - Change the mode back to `MODE=1` to submit new jobs.
+
 
 9. Once the model predictions have finished:
     - Restart `main.sh` to confirm that all jobs finished successfully
