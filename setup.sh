@@ -5,3 +5,4 @@ cp -r /mpcdf/soft/SLE_15/packages/x86_64/alphafold/2.3.0/lib/python3.8/site-pack
 
 # installs additional package networkx version into your environment
 pip install networkx==2.5
+pip install decorator

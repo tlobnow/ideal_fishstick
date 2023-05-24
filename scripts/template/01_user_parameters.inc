@@ -1,6 +1,6 @@
 ## Set user parameters for alphafold, common to MSA and prediction jobs
 
-source ../../PATHS.inc
+source ../../02_PATHS.inc
 source ../../01_source.inc
 source ./00_user_parameters.inc
 
@@ -21,7 +21,7 @@ PRESET=super2           #2 ensembles, up to 512 MSA clusters, recycling up to 20
 #RECYCLING_SETTING=0     #turn off intermediate recycle output (by setting save_recycled=0) to save memory cost
 RECYCLING_SETTING=1     #no recycle info saving
 #RECYCLING_SETTING=2    #print metrics of intermediate recycles
-#RECYCLING_SETTING=3    #additionally saving pdb structures of all recycles,
+RECYCLING_SETTING=3    #additionally saving pdb structures of all recycles,
 #RECYCLING_SETTING=4    #additionally save all results in pickle
 
 ## NEURAL NETWORK MODEL(s) ################################################

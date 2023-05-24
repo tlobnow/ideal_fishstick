@@ -1,5 +1,5 @@
 #source ../../PATHS.inc
-source ~/ideal_fishstick/scripts/PATHS.inc
+source ~/ideal_fishstick/scripts/02_PATHS.inc
 source ~/ideal_fishstick/scripts/01_source.inc
 source 00_user_parameters.inc
 

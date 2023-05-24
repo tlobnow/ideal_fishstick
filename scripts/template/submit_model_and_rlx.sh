@@ -2,7 +2,6 @@
 
 set -e
 
-JOBID1=$(sbatch --parsable )
 JOBID1=$(sbatch --parsable script_model_1.sh)
 JOBID2=$(sbatch --parsable script_model_2.sh)
 JOBID3=$(sbatch --parsable script_model_3.sh)

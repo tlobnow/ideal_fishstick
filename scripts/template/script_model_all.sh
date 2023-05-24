@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -J 2_AF2C
+#SBATCH -J 1_AF2C
 #SBATCH --ntasks=1
 #SBATCH --constraint="gpu"
 
@@ -47,7 +47,7 @@ export TF_FORCE_UNIFIED_MEMORY=1
         # Enable jax allocation tweak to allow for larger models, note that
         # with unified memory the fraction can be larger than 1.0 (=100% of single GPU memory):
         # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
-        # When using 3 GPUs:
+        # When using 2 GPUs:
 export XLA_PYTHON_CLIENT_MEM_FRACTION=4
 
         # run threaded tools with the correct number of threads (MPCDF customization)
@@ -84,9 +84,10 @@ srun $PYTHON_PATH/python3 -u $AF_DIR/run_af2c_mod.py \
   --data_dir=$DATA_DIR \
   --output_dir=$OUT_DIR \
   --feature_dir=$FEA_DIR \
-  --model_names=model_2_multimer_v3 \
+  --model_names=$NEURAL_NETWORK_MODELS \
   --preset=$PRESET \
   --model_preset=$MODEL_PRESET \
   --save_recycled=$RECYCLING_SETTING \
   --msa_pairing=$MSA_PAIRING \
 #  --checkpoint_tag=$CHECKPOINT_TAG
+

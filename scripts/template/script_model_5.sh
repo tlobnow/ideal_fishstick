@@ -4,9 +4,14 @@
 #SBATCH --constraint="gpu"
 
 # We will use 2 GPUs:
-#SBATCH --gres=gpu:a100:2
-#SBATCH --cpus-per-task=36
-#SBATCH --mem=250000
+##SBATCH --gres=gpu:a100:2
+##SBATCH --cpus-per-task=36
+##SBATCH --mem=250000
+
+# We will use 4 GPUs:
+#SBATCH --gres=gpu:a100:4
+#SBATCH --cpus-per-task=72
+#SBATCH --mem=500000
 
 # When using >1 GPUs, please adapt the variable XLA_PYTHON_CLIENT_MEM_FRACTION as well (see below)!
 #SBATCH --mail-type=NONE
