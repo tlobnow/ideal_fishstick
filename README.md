@@ -89,10 +89,10 @@
                     - it depends on monomer length how many can be predicted
                     - at some point the models will be too complex to finish within the 24hr slurm job limit
 
-7. Start runs and submit jobs:
-	- The script will execute the appropriate run option
+7. Start runs and submit jobs by executing the main script
 
         ./main.sh
+
 
 8. While the slurm jobs are running:
     - check progress of running jobs --> as described in (4.)
