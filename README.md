@@ -43,7 +43,7 @@
         conda activate fishy
 
         cd ideal_fishstick
-        git pull
+        git pull # make sure all scripts are up to date
 
 2. Enter the folder containing `fasta_files`
     - supply new fasta files / folder structures
@@ -52,7 +52,7 @@
     - To make sure everything is prepared, simply copy all fasta files into the main fasta_files directory as well
 
 3. Enter the `scripts` folder
-    - start the `02_prepYourFeatures.sh` script to prepare feature files for modeling through Multiple Sequence Alignments (for each file in the fasta folder)
+    - start the `prepYourFeatures.sh` script to prepare feature files for modeling through Multiple Sequence Alignments (for each file in the fasta folder)
 
 4. Supervise the progress of slurm jobs
     - `check_squeue.sh` will refresh every 10 seconds to show currently running jobs
