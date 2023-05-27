@@ -17,7 +17,7 @@ echo " ~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~
 # If $RUN is set to "MULTI", it performs the following tasks:
 #   
 # (1) It creates a list of all fasta files in a designated folder and saves it in a file called ${LOC_LISTS}/${FOLDER}_inds. 
-# (2) It loops through each line in ${LOC_LISTS}/${FOLDER}_inds, and checks if the corresponding run directory exists in ${LOC_SCRIPTS}/myRuns/. 
+# (2) It loops through each line in ${LOC_LISTS}/${FOLDER}_inds, and checks if the corresponding run directory exists in ${LOC_SCRIPTS}/runs/. 
 # (3) If it does not exist, it creates a new directory with the name of the fasta file, 
 #		and copies the content of the ${LOC_SCRIPTS}/template directory into it. 
 # (4) If the template directory was copied into the new directory by mistake, it is removed.
@@ -46,7 +46,7 @@ elif [ "$RUN" = "MULTI" ]; then
 
 	# create missing run directories and copy templates
 	while read -r LINE; do
-		RUN_DIR="${LOC_SCRIPTS}/myRuns/${LINE}"
+		RUN_DIR="${LOC_SCRIPTS}/runs/${LINE}"
 		if [ ! -d "$RUN_DIR" ]; then
 			echo "creating folder $LINE"
 			cp -r "${LOC_SCRIPTS}/template" "$RUN_DIR"
