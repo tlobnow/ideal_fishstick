@@ -35,6 +35,9 @@ NC='\033[0m' # No Color
 PREDICTION_TICKER=0
 ##################################################
 
+module purge
+module load jdk/8.265 gcc/10 impi/2021.2 fftw-mpi R/4.0.2
+
 FILE=$1
 CONTINUE=FALSE # BY DEFAULT FALSE, FIRST CHECK FOR MSA
 source ./02_PATHS.inc
@@ -147,22 +150,6 @@ if [ "$CONTINUE" = "TRUE" ]; then
 			if [ $PREDICTION_STATUS = "PASS" ]; then let PREDICTION_TICKER++ ; fi
 
 		done
-	#else
-	#	# enter the scripts folder
-	#	cd ${LOC_SCRIPTS}/runs/${FILE}
-	#	# submit a job that attempts to run all 5 models consecutively and afterwards starts Relaxation automatically (unless prohibited)
-	#	JOBID1=$(sbatch --parsable script_model_all.sh)
-	#	echo -e "${RED} ---> ${JOBID1} (PRED 1-5) ${NC}"
-#
-#		if [ $MODE -eq 1 -o $MODE -eq 5 ]; then
-#			#JOBID2=$(sbatch --parsable --dependency=afterok:${JOBID1} --deadline=now+2weeks script_relaxation.sh)
-#			#echo -e "${RED} ---> ${JOBID2} (RLX ALL) ${NC}"
-#			echo "NO RELAXATION STEP FOR NOW."
-#		else
-#			#echo -e "${RED}(3) NO SUBMISSION OF RELAXATION JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
-#			echo "NO RELAXATION STEP FOR NOW."
-#		fi
-#	fi
 
 	### STATUS OF THE RELAXED FILES
 	if [ $PREDICTION_TICKER -ge 5 ]; then
@@ -301,9 +288,9 @@ if [ "$CONTINUE" = "TRUE" ]; then
 			[ -f ${OUT_NAME}_ranking_model_${i}.json ] &&  mv ${OUT_NAME}_ranking_model_${i}.json ${LOC_OUT}/JSON/${OUT_NAME}_ranking_model_${i}.json
 		done
 
-		cd ${LOC_OUT}/JSON/ 
-		# REPLACE "Infinity" WITH LARGE NUMBER IN ALL JSON FILES FOR JSON EXTRACTION IN R
-		grep -rl Infinity . | xargs sed -i 's/Infinity/9999/g' 2>/dev/null
+		cd ${LOC_OUT}
+		echo "extracting JSON and converting to CSV file"
+		Rscript --vanilla ${LOC_SCRIPTS}/Rscripts/extract2csv.R ${LOC_OUT} ${OUT_NAME} ${RUN}
 
 		# REMOVE CHECKPOINT FOLDER IF FOUND
 		[ -f checkpoint ] && rm -r checkpoint

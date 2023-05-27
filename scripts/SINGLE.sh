@@ -37,6 +37,9 @@ NC='\033[0m' # No Color
 PREDICTION_TICKER=0
 ##################################################
 
+module purge
+module load jdk/8.265 gcc/10 impi/2021.2 fftw-mpi R/4.0.2
+
 CONTINUE=TRUE # BY DEFAULT FALSE, FIRST CHECK FOR MSA
 source ./01_source.inc
 source ./02_PATHS.inc
@@ -281,10 +284,13 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				[ -f ${OUT_NAME}_ranking_model_${i}.json ] &&  mv ${OUT_NAME}_ranking_model_${i}.json ${LOC_OUT}/JSON/${OUT_NAME}_ranking_model_${i}.json
 			done
 
-			cd ${LOC_OUT}/JSON/
+			cd ${LOC_OUT}
+			echo "extracting JSON and converting to CSV file"
+			Rscript --vanilla --verbose ${LOC_SCRIPTS}/Rscripts/extract2csv.R ${LOC_OUT} ${OUT_NAME} ${RUN}
 
+			#cd ${LOC_OUT}/JSON/
 			# REPLACE "Infinity" WITH LARGE NUMBER IN ALL JSON FILES FOR JSON EXTRACTION IN R
-			grep -rl Infinity . | xargs sed -i 's/Infinity/9999/g' 2>/dev/null
+			#grep -rl Infinity . | xargs sed -i 's/Infinity/9999/g' 2>/dev/null
 
 			# REMOVE CHECKPOINT FOLDER IF FOUND
 			[ -f checkpoint ] && rm -r checkpoint

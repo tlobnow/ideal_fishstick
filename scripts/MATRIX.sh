@@ -6,7 +6,7 @@ FORCE_PRED=FALSE
 FORCE_RLX=FALSE #TRUE
 
 MODE=1
-MODE=2
+#MODE=2
 
 # MODE 1: Start Everything (MSA, Modeling / Rlx / Processing)
 # MODE 2: Start Progress Report (no new jobs submitted)
@@ -34,6 +34,9 @@ NC='\033[0m' # No Color
 ### INITIATE A TICKER TO COUNT FINISHED MODELS
 PREDICTION_TICKER=0
 ##################################################
+
+module purge
+module load jdk/8.265 gcc/10 impi/2021.2 fftw-mpi R/4.0.2
 
 FILE=$1
 CONTINUE=FALSE # BY DEFAULT FALSE, FIRST CHECK FOR MSA
@@ -257,9 +260,10 @@ for i in {1..5}; do
 					[ -f ranking_model_${m}* ] && mv  ranking_model_${m}* ${LOC_OUT}/JSON/${OUT_NAME}_ranking_model_${m}.json
 					[ -f ${OUT_NAME}_ranking_model_${m}.json ] &&  mv ${OUT_NAME}_ranking_model_${m}.json ${LOC_OUT}/JSON/${OUT_NAME}_ranking_model_${m}.json
 				done
-				cd ${LOC_OUT}/JSON/
-				# REPLACE "Infinity" WITH LARGE NUMBER IN ALL JSON FILES FOR JSON EXTRACTION IN R
-				grep -rl Infinity . | xargs sed -i 's/Infinity/9999/g' 2>/dev/null
+				cd ${LOC_OUT}
+                		echo "extracting JSON and converting to CSV file"
+		                Rscript --vanilla ${LOC_SCRIPTS}/Rscripts/extract2csv.R ${LOC_OUT} ${OUT_NAME} ${RUN}
+
 				# REMOVE CHECKPOINT FOLDER IF FOUND
 				[ -f checkpoint ] && rm -r checkpoint
 				# COPY THE FOLDER INTO TRANSFERGIT REPO
