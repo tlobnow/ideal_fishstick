@@ -6,7 +6,7 @@ FORCE_PRED=FALSE
 FORCE_RLX=FALSE #TRUE
 
 MODE=1
-#MODE=2
+MODE=2
 
 # MODE 1: Start Everything (MSA, Modeling / Rlx / Processing)
 # MODE 2: Start Progress Report (no new jobs submitted)
@@ -46,24 +46,31 @@ source ./01_source.inc
 # Check if MSA needs to be run (starts job if necessary)
 #source ./msa_run.sh
 
+
+for i in {1..5}; do
+        for j in {1..5}; do echo ${FILE_A}_x${i}_${FILE}_x${j}
+	done >>  ${LOC_LISTS}/${FILE_A}_${FILE}_SCAN_INDS
+done
+
+
 CONTINUE=TRUE
 for i in {1..5}; do
-	for j in 1; do
+	for j in {1..5}; do
 		NUM=$((i+j))
 		# SET THE STOICHIOMETRY, OUT_NAME STRUCTURE
 		STOICHIOMETRY=${FILE_A}:${i}/${FILE}:${j}
-		#OUT_NAME=${FILE_A}_x${i}_${FILE}_x${j}
-		OUT_NAME=${FILE_A}_x${NUM}
+		OUT_NAME=${FILE_A}_x${i}_${FILE}_x${j}
+		#OUT_NAME=${FILE_A}_x${NUM}
 		LOC_OUT=${MAIN}/output_files/${OUT_NAME}
 
 		#for m in {1..$i}; do
-		#	for j in {1..$j}; do echo ${FILE_A}_x${i}_${FILE}_x${j}
+		#	for j in {1..5}; do echo ${FILE_A}_x${i}_${FILE}_x${j}
 		#	done >>  ${LOC_LISTS}/${FILE_A}_${FILE}_SCAN_INDS
 		#done
 
-		for NUM in {1..5}; do
-			echo ${FILE_A}_x$NUM
-		done > ${LOC_LISTS}/${FILE_A}_${FILE}_SCAN_INDS
+		#for NUM in {1..5}; do
+		#	echo ${FILE_A}_x$NUM
+		#done > ${LOC_LISTS}/${FILE_A}_${FILE}_SCAN_INDS
 
 		# Prep the run
 		if [ "$CONTINUE" = "TRUE" ]; then

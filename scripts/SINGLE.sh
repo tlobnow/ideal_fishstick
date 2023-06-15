@@ -53,144 +53,155 @@ if [ "$CONTINUE" = "TRUE" ]; then
 	[ -f ${LOC_SCRIPTS}/runs/${OUT_NAME}/template ] && rm -r ${LOC_SCRIPTS}/runs/${OUT_NAME}/template
 
 	### ENTER SCRIPTS FOLDER
-        cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
+	cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
 
-        ### SET FILE NAME IN USER PARAMETERS
+	### SET FILE NAME IN USER PARAMETERS
 	echo FILE=${OUT_NAME}  > 00_user_parameters.inc
 
-        ### SET TARGET STOICHIOMETRY
-        echo $STOICHIOMETRY 300 ${OUT_NAME} > target.lst
+    ### SET TARGET STOICHIOMETRY
+	echo $STOICHIOMETRY 300 ${OUT_NAME} > target.lst
 
-		### ASSESS THE CURRENT STATUS OF MODEL FILES:
-		cd ${LOC_OUT} 2>/dev/null # the 2>/dev/null just means that we ignore the error messages (e.g. cannot access folder, list stuff, ..)
+	### ASSESS THE CURRENT STATUS OF MODEL FILES:
+	cd ${LOC_OUT} 2>/dev/null # the 2>/dev/null just means that we ignore the error messages (e.g. cannot access folder, list stuff, ..)
 
-		### 5 NEURAL NETWORK MODELS ARE USED - WE LOOP THROUGH 1:5 TO CHECK MODEL PROGRESS
-		for i in {1..5}; do
+	# FIND AND REMOVE PICKLE FILES IN OUTPUT FOLDER (HUGE + USELESS FOR US)
+	find ${LOC_OUT} 2>/dev/null -name \*.pkl -delete
 
-			# FIND AND REMOVE PICKLE FILES IN OUTPUT FOLDER (HUGE + USELESS FOR US)
-			find ${LOC_OUT} 2>/dev/null -name \*.pkl -delete
+	# HOW MANY MODELS ARE RELAXED AND CORRECTLY RENAMED?
+	OUT_RLX_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^relaxed_${OUT_NAME}_model_* | wc -l`
 
-			# HOW MANY MODELS ARE RELAXED AND CORRECTLY RENAMED?
-			OUT_RLX_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^relaxed_${OUT_NAME}_model_${i}_* | wc -l`
+	# HOW MANY MODELS HAVE RUN SUCCESSFULLY AND HAVE BEEN RENAMED ALREADY?
+	OUT_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^${OUT_NAME}_model_* | wc -l`
 
-			# HOW MANY MODELS HAVE RUN SUCCESSFULLY AND HAVE BEEN RENAMED ALREADY?
-			OUT_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^${OUT_NAME}_model_${i}_* | wc -l`
+	# HOW MANY MODELS HAVE RUN SUCCESSFULLY BUT ARE NOT RENAMED YET?
+	MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^model_* | wc -l`
 
-			# HOW MANY MODELS HAVE RUN SUCCESSFULLY BUT ARE IN THE INITIAL STATE?
-			MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^model_${i}_* | wc -l`
+	# IF A DIRECTORY NAMED UNRLXD EXISTS AND IT'S NOT EMPTY -> HOW MANY RENAMED MODEL FILES ARE IN THERE ALREADY?
+	[ -d ${LOC_OUT}/UNRLXD 2>/dev/null ] && MOVED_OUT_MODEL_COUNT=`ls ${LOC_OUT}/UNRLXD | grep ^${OUT_NAME}_model_* | wc -l` || MOVED_OUT_MODEL_COUNT=0
 
-			# IF A DIRECTORY NAMED UNRLXD EXISTS AND IT'S NOT EMPTY -> HOW MANY RENAMED MODEL FILES ARE IN THERE ALREADY?
-			[ -d ${LOC_OUT}/UNRLXD 2>/dev/null ] && MOVED_OUT_MODEL_COUNT=`ls ${LOC_OUT}/UNRLXD | grep ^${OUT_NAME}_model_${i}_* | wc -l` || MOVED_OUT_MODEL_COUNT=0
+	# IF NO PREDICTIONS HAVE STARTED YET, TRY TO PREDICT ALL MODELS IN ONE SCRIPT
+	# (DEP. ON INPUT SIZE IT MIGHT FINISH WITHIN 24 HOURS, ELSE INDIVIDUAL MODELS ARE RUN)
+	if [ $MODE -eq 1 -o $MODE -eq 3 ]; then
+		if [[ ($OUT_RLX_MODEL_COUNT -eq 0) && ( $MODEL_COUNT -eq 0 ) && ( $OUT_MODEL_COUNT -eq 0 ) && ( $MOVED_OUT_MODEL_COUNT -eq 0 ) ]] ; then
 
-			# IF THE MODEL OR THE RELAXED FILE OF THE MODEL EXIST IN THE OUPUT FOLDER --> SETS PREDICTION_STATUS TO PASS
-			if [[ ($OUT_RLX_MODEL_COUNT -eq 1) || ( $MODEL_COUNT -eq 1 ) || ( $OUT_MODEL_COUNT -eq 1 ) ]] ; then
-				if [ $EXTENDED_VIEW = TRUE ]; then
-					echo "(2) ---> PREDICTION ${i} OF ${OUT_NAME} DONE."
-				fi
-				PREDICTION_STATUS="PASS"
-
-			# CHECK IF ANY OF THE MODELS HAVE RUN MORE THAN ONCE! GIVES A WARNING IF SO
-			elif [[ ($OUT_RLX_MODEL_COUNT -gt 1) || ( $MODEL_COUNT -gt 1 ) || ( $OUT_MODEL_COUNT -gt 1 ) ]] ; then
-				echo -e "${YELLOW}(2) MODEL ${i} WAS PREDICTED MORE THAN ONCE. PLEASE CHECK FOLDER BEFORE JOINING SLURMS [PREDICTION_STATUS = PASS]${NC}"
-				PREDICTION_STATUS="PASS"
-
-			# IF THE UNRLXD FOLDER WAS ALREADY CREATED, CHECK THE CONTENT AND MOVE FILES BACK INTO MAIN FILE FOLDER
-			elif [ $MOVED_OUT_MODEL_COUNT -eq 1 ]; then
-				if [ $EXTENDED_VIEW = TRUE ]; then
-					echo " ---> PREDICTION ${i} OF ${OUT_NAME} DONE."
-				fi
-				mv [ -f ${LOC_OUT}/UNRLXD/${OUT_NAME}_model_${i}_* ] && ${LOC_OUT}/UNRLXD/${OUT_NAME}_model_${i}_* ${LOC_OUT}
-				PREDICTION_STATUS="PASS"
-
-			# LIKELY NO MODEL CREATED UNTIL NOW -> CHECK FOR TIME LIMIT FAILS OR START NEW MODELING JOB
+			cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
+			JOBID1=$(sbatch --parsable script_model_all.sh)
+			echo -e "${RED} ---> ${JOBID1} (PRED 1-5)${NC}"
+			if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
+				#JOBID2=$(sbatch --parsable --dependency=afterok:${JOBID1} --deadline=now+2weeks script_relaxation.sh)
+				#echo -e "${RED} ---> ${JOBID1} (RLX ALL)${NC}"
+				echo "NO RELAXATION STEP FOR NOW."
 			else
-				cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
-				grep --include=slurm\* -rzl . -e "DUE TO TIME LIMIT"
-				TIME_LIMIT_EVAL=$?
+				#echo -e "${RED}(3) CANNOT START RELAXATION OF ${OUT_NAME}  - CHANGE TO MODE=1 TO ALLOW NEW SUBMISSIONS.${NC}"
+				echo "NO RELAXATION STEP FOR NOW."
+			fi
+		else
+			### 5 NEURAL NETWORK MODELS ARE USED - WE LOOP THROUGH 1:5 TO CHECK MODEL PROGRESS
+			for i in {1..5}; do
 
-				grep --include=slurm\* -rzl . -e "model_${i}.*x not in list"
-				X_NOT_IN_LIST_EVAL=$?
+				# HOW MANY MODELS ARE RELAXED AND CORRECTLY RENAMED?
+				OUT_RLX_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^relaxed_${OUT_NAME}_model_${i}_* | wc -l`
 
-				grep --include=slurm\* -rzl . -e "model_${i}.*Out of memory"
-				OOM_EVAL=$?
+				# HOW MANY MODELS HAVE RUN SUCCESSFULLY AND HAVE BEEN RENAMED ALREADY?
+				OUT_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^${OUT_NAME}_model_${i}_* | wc -l`
 
-				# 0 means FAIL >> at least one job was canceled due to TIME LIMIT or LIST ERROR
-				# 1 means PASS >> none of the slurm jobs were canceled due to TIME LIMIT or LIST ERROR - likely need a restart!
-				if [ $TIME_LIMIT_EVAL = 0 ]; then
-					echo -e "${BLUE}(2) TIME LIMIT FAIL OF ${OUT_NAME}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
-				elif [ $X_NOT_IN_LIST_EVAL = 0 ]; then
-					if [ $FORCE_PRED = "TRUE" ]; then
+				# HOW MANY MODELS HAVE RUN SUCCESSFULLY BUT ARE IN THE INITIAL STATE?
+				MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^model_${i}_* | wc -l`
+
+				# IF A DIRECTORY NAMED UNRLXD EXISTS AND IT'S NOT EMPTY -> HOW MANY RENAMED MODEL FILES ARE IN THERE ALREADY?
+				[ -d ${LOC_OUT}/UNRLXD 2>/dev/null ] && MOVED_OUT_MODEL_COUNT=`ls ${LOC_OUT}/UNRLXD | grep ^${OUT_NAME}_model_${i}_* | wc -l` || MOVED_OUT_MODEL_COUNT=0
+
+				# IF THE MODEL OR THE RELAXED FILE OF THE MODEL EXIST IN THE OUPUT FOLDER --> SETS PREDICTION_STATUS TO PASS
+				if [[ ($OUT_RLX_MODEL_COUNT -eq 1) || ( $MODEL_COUNT -eq 1 ) || ( $OUT_MODEL_COUNT -eq 1 ) ]] ; then
+					if [ $EXTENDED_VIEW = TRUE ]; then
+						echo "(2) ---> PREDICTION ${i} OF ${OUT_NAME} DONE."
+					fi
+					PREDICTION_STATUS="PASS"
+
+				# CHECK IF ANY OF THE MODELS HAVE RUN MORE THAN ONCE! GIVES A WARNING IF SO
+				elif [[ ($OUT_RLX_MODEL_COUNT -gt 1) || ( $MODEL_COUNT -gt 1 ) || ( $OUT_MODEL_COUNT -gt 1 ) ]] ; then
+					echo -e "${YELLOW}(2) MODEL ${i} OF ${OUT_NAME} WAS PREDICTED MORE THAN ONCE. PLEASE CHECK FOLDER BEFORE JOINING SLURMS [PREDICTION_STATUS = PASS]${NC}"
+					PREDICTION_STATUS="PASS"
+
+				# IF THE UNRLXD FOLDER WAS ALREADY CREATED, CHECK THE CONTENT AND MOVE FILES BACK INTO MAIN FILE FOLDER
+				elif [ $MOVED_OUT_MODEL_COUNT -eq 1 ]; then
+					if [ $EXTENDED_VIEW = TRUE ]; then
+						echo " ---> PREDICTION ${i} OF ${OUT_NAME} DONE."
+					fi
+					[ -f ${LOC_OUT}/UNRLXD/${OUT_NAME}_model_${i}_* ] && mv ${LOC_OUT}/UNRLXD/${OUT_NAME}_model_${i}_* ${LOC_OUT}
+					PREDICTION_STATUS="PASS"
+
+				# LIKELY NO MODEL CREATED UNTIL NOW -> CHECK FOR TIME LIMIT FAILS OR START NEW MODELING JOB
+				else
+					cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
+					grep --include=slurm\* -rzl . -e "DUE TO TIME LIMIT"
+					TIME_LIMIT_EVAL=$?
+
+					grep --include=slurm\* -rzl . -e "model_${i}.*x not in list"
+					X_NOT_IN_LIST_EVAL=$?
+
+					grep --include=slurm\* -rzl . -e "model_${i}.*Out of memory"
+					OOM_EVAL=$?
+
+					# 0 means FAIL >> at least one job was canceled due to TIME LIMIT or LIST ERROR
+					# 1 means PASS >> none of the slurm jobs were canceled due to TIME LIMIT or LIST ERROR - likely need a restart!
+					if [ $TIME_LIMIT_EVAL = 0 ]; then
+						echo -e "${BLUE}(2) TIME LIMIT FAIL OF ${OUT_NAME}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
+					elif [ $X_NOT_IN_LIST_EVAL = 0 ]; then
+						if [ $FORCE_PRED = "TRUE" ]; then
+							if [ $MODE -eq 1 -o $MODE -eq 3 ]; then
+								JOBID1=$(sbatch --parsable script_model_${i}.sh)
+								echo -e "${RED} ---> ${JOBID1} (PRED ${i})${NC}"
+							else
+								echo -e "${RED}(2) NO SUBMISSION OF MODELING JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
+							fi
+						else
+							echo -e "${BLUE}(2) X NOT IN LIST FAIL OF ${OUT_NAME} MODEL ${i}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
+						fi
+					elif [ $OOM_EVAL = 0 ]; then
+						echo -e "${BLUE}(2) OUT OF MEMORY FAIL OF  ${OUT_NAME} MODEL ${i}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
+					else
 						if [ $MODE -eq 1 -o $MODE -eq 3 ]; then
 							JOBID1=$(sbatch --parsable script_model_${i}.sh)
 							echo -e "${RED} ---> ${JOBID1} (PRED ${i})${NC}"
 						else
-							echo -e "${RED}(2) NO SUBMISSION OF MODELING JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
+							echo -e "${RED}(2) CANNOT START PRED ${i} OF ${OUT_NAME} - CHANGE TO MODE=1 TO ALLOW NEW SUBMISSIONS.${NC}"
 						fi
-					else
-						echo -e "${BLUE}(2) X NOT IN LIST FAIL OF ${OUT_NAME} MODEL ${i}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
 					fi
-				elif [ $OOM_EVAL = 0 ]; then
-					echo -e "${BLUE}(2) OUT OF MEMORY FAIL OF  ${OUT_NAME} MODEL ${i}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
-				else
-					if [ $MODE -eq 1 -o $MODE -eq 3 ]; then
-						JOBID1=$(sbatch --parsable script_model_${i}.sh)
-						echo -e "${RED} ---> ${JOBID1} (PRED ${i})${NC}"
-					else
-						echo -e "${RED}(2) NO SUBMISSION OF MODELING JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
-					fi
+					PREDICTION_STATUS="FAIL"
 				fi
-				PREDICTION_STATUS="FAIL"
+
+				# IF ANY PREDICTION_STATUS WAS SET TO PASS, THE TICKER GOES UP BY ONE
+				if [ $PREDICTION_STATUS = "PASS" ]; then let PREDICTION_TICKER++ ; fi
+			done
+		fi
+	else
+		echo -e "${RED}(2) CANNOT START PREDICTION OF ${OUT_NAME} - CHANGE TO MODE=1 TO ALLOW NEW SUBMISSIONS.${NC}"
+	fi
+
+
+	### STATUS OF THE RELAXED FILES
+	if [ $PREDICTION_TICKER -ge 5 ]; then
+		cd ${LOC_OUT}
+		RLX_COUNT=`ls ${LOC_OUT} | grep 'relaxed' | wc -l`
+		RLX_COUNT_v2=`ls ${LOC_OUT} | grep 'rlx' | wc -l`
+		# IF THERE ARE AT LEAST FIVE RELAXED SAMPLES, GIVE RELAXATION PASS
+		if [ $RLX_COUNT -ge 5 -o $RLX_COUNT_v2 -ge 5 ]; then
+			# REMOVE PICKLE FILES IF FOUND
+			find ${LOC_OUT} -name \*.pkl -delete
+			RELAXATION_STATUS="PASS"
+			if [ $EXTENDED_VIEW = TRUE ]; then
+				echo "(3) RELAXATION OF ${OUT_NAME} FINISHED SUCCESSFULLY."
 			fi
-
-			# IF ANY PREDICTION_STATUS WAS SET TO PASS, THE TICKER GOES UP BY ONE
-			if [ $PREDICTION_STATUS = "PASS" ]; then let PREDICTION_TICKER++ ; fi
-
-		done
-
-		### STATUS OF THE RELAXED FILES
-		if [ $PREDICTION_TICKER -ge 5 ]; then
-			cd ${LOC_OUT}
-			RLX_COUNT=`ls ${LOC_OUT} | grep 'relaxed' | wc -l`
-			RLX_COUNT_v2=`ls ${LOC_OUT} | grep 'rlx' | wc -l`
-
-
-			# IF THERE ARE AT LEAST FIVE RELAXED SAMPLES, GIVE RELAXATION PASS
-			if [ $RLX_COUNT -ge 5 -o $RLX_COUNT_v2 -ge 5 ]; then
-				# REMOVE PICKLE FILES IF FOUND
-				find ${LOC_OUT} -name \*.pkl -delete
+		elif [ $RLX_COUNT -ge 1 -o $RLX_COUNT_v2 -ge 1 ]; then
+			# PARTIAL RELAXATION, BUT NOT FORCED TO RESTART
+			if [ $FORCE_RLX = FALSE ]; then
+				echo -e "${YELLOW}(3) RELAXATION OF ${OUT_NAME} WAS ATTEMPTED, BUT HAS NOT FINISHED. SET FORCE_RLX = TRUE IF NECESSARY.${NC}"
 				RELAXATION_STATUS="PASS"
-
-				if [ $EXTENDED_VIEW = TRUE ]; then
-					echo "(3) RELAXATION OF ${OUT_NAME} FINISHED SUCCESSFULLY."
-				fi
-
-
-			elif [ $RLX_COUNT -ge 1 -o $RLX_COUNT_v2 -ge 1 ]; then
-
-				# PARTIAL RELAXATION, BUT NOT FORCED TO RESTART
-				if [ $FORCE_RLX = FALSE ]; then
-					echo -e "${YELLOW}(3) RELAXATION OF ${OUT_NAME} WAS ATTEMPTED, BUT HAS NOT FINISHED. SET FORCE_RLX = TRUE IF NECESSARY.${NC}"
-					RELAXATION_STATUS="PASS"
-
-				# FORCES TO REMOVE PRE-EXISTING RELAXED FILES AND START NEW RELAXATION
-				else
-					[ -f  ${LOC_OUT}/relaxed_model_1* -o -f ${LOC_OUT}/relaxed_${OUT_NAME}_model_1* ] && rm relaxed*
-					[ -f  ${LOC_OUT}/${OUT_NAME}_rlx_model_1* ] && rm *rlx*
-
-					# START NEW RELAXATION
-					cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
-					if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
-						#JOBID1=$(sbatch --parsable script_relaxation.sh)
-						#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
-						echo "NO RELAXATION STEP FOR NOW."
-					else
-						#echo -e "${RED}(3) NO SUBMISSION OF RELAXATION JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
-						echo "NO RELAXATION STEP FOR NOW."
-					fi
-					RELAXATION_STATUS="FAIL"
-				fi
-			# OTHERWISE REMOVE PRE-EXISTING RELAXED FILES AND START NEW RELAXATION
+			# FORCES TO REMOVE PRE-EXISTING RELAXED FILES AND START NEW RELAXATION
 			else
+				[ -f  ${LOC_OUT}/relaxed_model_1* -o -f ${LOC_OUT}/relaxed_${OUT_NAME}_model_1* ] && rm relaxed*
+				[ -f  ${LOC_OUT}/${OUT_NAME}_rlx_model_1* ] && rm *rlx*
 				# START NEW RELAXATION
 				cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
 				if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
@@ -198,117 +209,114 @@ if [ "$CONTINUE" = "TRUE" ]; then
 					#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
 					echo "NO RELAXATION STEP FOR NOW."
 				else
-					#echo -e "${RED}(3) NO SUBMISSION OF RELAXATION JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
+					#echo -e "${RED}(3) CANNOT START RELAXATION OF ${OUT_NAME}  - CHANGE TO MODE=1 TO ALLOW NEW SUBMISSIONS.${NC}"
 					echo "NO RELAXATION STEP FOR NOW."
-
 				fi
 				RELAXATION_STATUS="FAIL"
 			fi
-
-		# if the prediction ticker is less than five, check if it's due to slurm job time limitation, then proceed with relaxation!
-		elif [ $PREDICTION_TICKER -lt 5 ]; then
-
+		# OTHERWISE REMOVE PRE-EXISTING RELAXED FILES AND START NEW RELAXATION
+		else
+			# START NEW RELAXATION
 			cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
-			grep --include=slurm\* -rzl . -e "DUE TO TIME LIMIT"
-
-			TIME_LIMIT_EVAL=$?
-				# 0 means FAIL >> at least one job was canceled due to TIME LIMIT
-				# 1 means PASS >> none of the slurm jobs were canceled due to TIME LIMIT - likely need a restart!
-			if [ $TIME_LIMIT_EVAL = 0 ]; then
-
-				echo -e "${BLUE} TIME LIMIT FAIL OF ${OUT_NAME}! WILL CONTINUE WITH RELAXATION. ${NC}"
-				cd ${LOC_OUT}
-				RLX_COUNT=`ls ${LOC_OUT} | grep 'relaxed' | wc -l`
-				RLX_COUNT_v2=`ls ${LOC_OUT} | grep 'rlx' | wc -l`
-
-				# IF THERE ARE AT LEAST FIVE RELAXED SAMPLES, GIVE RELAXATION PASS
-				if [ $RLX_COUNT -eq $PREDICTION_TICKER -o $RLX_COUNT_v2 -eq $PREDICTION_TICKER ]; then
-					# REMOVE PICKLE FILES IF FOUND
-					find ${LOC_OUT} -name \*.pkl -delete
-					RELAXATION_STATUS="PASS"
-
-					if [ $EXTENDED_VIEW = TRUE ]; then
-						echo "(3) RELAXATION OF ${OUT_NAME} FINISHED SUCCESSFULLY."
-					fi
-
-				# OTHERWISE REMOVE PRE-EXISTING RELAXED FILES AND START NEW RELAXATION
-				else
-					[ -f  ${LOC_OUT}/relaxed_model_1* -o -f ${LOC_OUT}/relaxed_${OUT_NAME}_model_1* ] && rm relaxed*
-					[ -f  ${LOC_OUT}/${OUT_NAME}_rlx_model_1* ] && rm *rlx*
-
-					# START NEW RELAXATION
-					cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
-					if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
-						#jobid1=$(sbatch --parsable script_relaxation.sh)
-						#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
-						echo "NO RELAXATION STEP FOR NOW."
-					else
-						#echo -e "${RED}(3) NO SUBMISSION OF RELAXATION JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
-						echo "NO RELAXATION STEP FOR NOW."
-					fi
-					RELAXATION_STATUS="FAIL"
+			if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
+				#JOBID1=$(sbatch --parsable script_relaxation.sh)
+				#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
+				echo "NO RELAXATION STEP FOR NOW."
+			else
+				#echo -e "${RED}(3) CANNOT START RELAXATION OF ${OUT_NAME} - CHANGE TO MODE=1 TO ALLOW NEW SUBMISSIONS.${NC}"
+				echo "NO RELAXATION STEP FOR NOW."
+			fi
+			RELAXATION_STATUS="FAIL"
+		fi
+	# if the prediction ticker is less than five, check if it's due to slurm job time limitation, then proceed with relaxation!
+	elif [ $PREDICTION_TICKER -lt 5 ]; then
+		cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
+		grep --include=slurm\* -rzl . -e "DUE TO TIME LIMIT"
+		TIME_LIMIT_EVAL=$?
+			# 0 means FAIL >> at least one job was canceled due to TIME LIMIT
+			# 1 means PASS >> none of the slurm jobs were canceled due to TIME LIMIT - likely need a restart!
+		if [ $TIME_LIMIT_EVAL = 0 ]; then
+			echo -e "${BLUE} TIME LIMIT FAIL OF ${OUT_NAME}! WILL CONTINUE WITH RELAXATION. ${NC}"
+			cd ${LOC_OUT}
+			RLX_COUNT=`ls ${LOC_OUT} | grep 'relaxed' | wc -l`
+			RLX_COUNT_v2=`ls ${LOC_OUT} | grep 'rlx' | wc -l`
+			# IF THERE ARE AT LEAST FIVE RELAXED SAMPLES, GIVE RELAXATION PASS
+			if [ $RLX_COUNT -eq $PREDICTION_TICKER -o $RLX_COUNT_v2 -eq $PREDICTION_TICKER ]; then
+				# REMOVE PICKLE FILES IF FOUND
+				find ${LOC_OUT} -name \*.pkl -delete
+				RELAXATION_STATUS="PASS"
+				if [ $EXTENDED_VIEW = TRUE ]; then
+					echo "(3) RELAXATION OF ${OUT_NAME} FINISHED SUCCESSFULLY."
 				fi
+			# OTHERWISE REMOVE PRE-EXISTING RELAXED FILES AND START NEW RELAXATION
+			else
+				[ -f  ${LOC_OUT}/relaxed_model_1* -o -f ${LOC_OUT}/relaxed_${OUT_NAME}_model_1* ] && rm relaxed*
+				[ -f  ${LOC_OUT}/${OUT_NAME}_rlx_model_1* ] && rm *rlx*
+				# START NEW RELAXATION
+				cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
+				if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
+					#jobid1=$(sbatch --parsable script_relaxation.sh)
+					#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
+					echo "NO RELAXATION STEP FOR NOW."
+				else
+					#echo -e "${RED}(3) CANNOT START RELAXATION - CHANGE TO MODE=1 TO ALLOW NEW SUBMISSIONS.${NC}"
+					echo "NO RELAXATION STEP FOR NOW."
+				fi
+				RELAXATION_STATUS="FAIL"
 			fi
-		else
-			echo -e "${RED} ---> WAITING FOR ${OUT_NAME} MODELING TO FINISH. ${NC}"
+		fi
+	else
+		echo -e "${RED} ---> WAITING FOR ${OUT_NAME} MODELING TO FINISH. ${NC}"
+	fi
+
+	### STATUS OF R PREPARATION
+	#if [ "$RELAXATION_STATUS" = "PASS" ]; then
+	if [ $PREDICTION_TICKER -ge 5 ]; then
+		# CREATE NECESSARY FOLDERS / ENSURE THEY HAVE BEEN CREATED ALREADY
+		mkdir -p ${LOC_OUT}/JSON
+		mkdir -p ${LOC_OUT}/UNRLXD
+		mkdir -p ${LOC_OUT}/SLURMS
+		# ENTER THE SCRIPTS FOLDER
+		cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
+		# CONCATENATE SLURM FILES AND STORE THEM IN OUTPUT FOLDER
+		#cat slurm* > ${LOC_OUT}/slurm.out
+		cp slurm* ${LOC_OUT}/SLURMS/
+		# ENTER OUTPUT FOLDER
+		cd ${LOC_OUT}
+		[ -f relax_metrics.json ] && rm relax_metrics.json
+		# RENAME FILES
+		for i in {1..5}
+		do
+			#for j in relaxed_model_${i}_*; do mv -- "$j" "${OUT_NAME}_rlx_model_${i}.pdb" ; done
+			[ -f relaxed_model_${i}_* ] && mv relaxed_model_${i}_* ${OUT_NAME}_rlx_model_${i}.pdb
+			[ -f ${OUT_NAME}_model_${i}.pdb ] &&  mv ${OUT_NAME}_model_${i}.pdb     ${LOC_OUT}/UNRLXD/${OUT_NAME}_model_${i}.pdb
+			[ -f model_${i}* ] && mv  model_${i}* ${LOC_OUT}/UNRLXD/${OUT_NAME}_model_${i}.pdb
+			[ -f ranking_model_${i}* ] && mv  ranking_model_${i}* ${LOC_OUT}/JSON/${OUT_NAME}_ranking_model_${i}.json
+			[ -f ${OUT_NAME}_ranking_model_${i}.json ] &&  mv ${OUT_NAME}_ranking_model_${i}.json ${LOC_OUT}/JSON/${OUT_NAME}_ranking_model_${i}.json
+		done
+		[ -f ranking_all_* ] && mv  ranking_all_* ${LOC_OUT}/JSON/${OUT_NAME}_ranking_all.json
+		cd ${LOC_OUT}
+		echo "extracting JSON and converting to CSV file"
+		#Rscript --vanilla --verbose ${LOC_SCRIPTS}/Rscripts/extract2csv.R ${LOC_OUT} ${OUT_NAME} ${RUN}
+		Rscript --vanilla ${LOC_SCRIPTS}/Rscripts/extract2csv.R ${LOC_OUT} ${OUT_NAME} ${RUN}
+
+		# REMOVE CHECKPOINT FOLDER IF FOUND
+		[ -f checkpoint ] && rm -r checkpoint
+
+		# COPY THE FOLDER INTO TRANSFERGIT REPO
+		cp -r ${LOC_OUT}/ ~/transferGit/
+
+		if [ $EXTENDED_VIEW = TRUE ]; then
+			echo "(4) R PREPARATION OF ${OUT_NAME} FINISHED SUCCESSFULLY."
+			echo "(5) PIPELINE OF ${OUT_NAME} FINISHED SUCCESSFULLY."
+			#echo "(6) COPIED FOLDER TO ~/transferGit/"
+			ls ${LOC_OUT}
 		fi
 
-		### STATUS OF R PREPARATION
-		#if [ "$RELAXATION_STATUS" = "PASS" ]; then
-		if [ $PREDICTION_TICKER -ge 5 ]; then
-			# CREATE NECESSARY FOLDERS / ENSURE THEY HAVE BEEN CREATED ALREADY
-			mkdir -p ${LOC_OUT}/JSON
-			mkdir -p ${LOC_OUT}/UNRLXD
-			mkdir -p ${LOC_OUT}/SLURMS
-
-			# ENTER THE SCRIPTS FOLDER
-			cd ${LOC_SCRIPTS}/runs/${OUT_NAME}
-
-			# CONCATENATE SLURM FILES AND STORE THEM IN OUTPUT FOLDER
-			cat slurm* > ${LOC_OUT}/slurm.out
-			cp slurm* ${LOC_OUT}/SLURMS/
-
-			# ENTER OUTPUT FOLDER
-			cd ${LOC_OUT}
-
-			[ -f relax_metrics.json ] && rm relax_metrics.json
-
-            # RENAME FILES
-			for i in {1..5}
-			do
-				#for j in relaxed_model_${i}_*; do mv -- "$j" "${OUT_NAME}_rlx_model_${i}.pdb" ; done
-				[ -f relaxed_model_${i}_* ] && mv relaxed_model_${i}_* ${OUT_NAME}_rlx_model_${i}.pdb
-				[ -f ${OUT_NAME}_model_${i}.pdb ] &&  mv ${OUT_NAME}_model_${i}.pdb     ${LOC_OUT}/UNRLXD/${OUT_NAME}_model_${i}.pdb
-				[ -f model_${i}* ] && mv  model_${i}* ${LOC_OUT}/UNRLXD/${OUT_NAME}_model_${i}.pdb
-				[ -f ranking_model_${i}* ] && mv  ranking_model_${i}* ${LOC_OUT}/JSON/${OUT_NAME}_ranking_model_${i}.json
-				[ -f ${OUT_NAME}_ranking_model_${i}.json ] &&  mv ${OUT_NAME}_ranking_model_${i}.json ${LOC_OUT}/JSON/${OUT_NAME}_ranking_model_${i}.json
-			done
-
-			cd ${LOC_OUT}
-			echo "extracting JSON and converting to CSV file"
-			Rscript --vanilla --verbose ${LOC_SCRIPTS}/Rscripts/extract2csv.R ${LOC_OUT} ${OUT_NAME} ${RUN}
-
-			#cd ${LOC_OUT}/JSON/
-			# REPLACE "Infinity" WITH LARGE NUMBER IN ALL JSON FILES FOR JSON EXTRACTION IN R
-			#grep -rl Infinity . | xargs sed -i 's/Infinity/9999/g' 2>/dev/null
-
-			# REMOVE CHECKPOINT FOLDER IF FOUND
-			[ -f checkpoint ] && rm -r checkpoint
-
-			# COPY THE FOLDER INTO TRANSFERGIT REPO
-			#cp -r ${LOC_OUT}/ ~/transferGit/
-
-			if [ $EXTENDED_VIEW = TRUE ]; then
-				echo "(4) R PREPARATION OF ${OUT_NAME} FINISHED SUCCESSFULLY."
-				echo "(5) PIPELINE OF ${OUT_NAME} FINISHED SUCCESSFULLY."
-				#echo "(6) COPIED FOLDER TO ~/transferGit/"
-				ls ${LOC_OUT}
-			fi
-
-		else
-			echo -e "${RED} ---> WAITING FOR ${OUT_NAME} MODELING TO FINISH. ${NC}"
-			#echo -e "${RED} ---> WAITING FOR ${OUT_NAME} RELAXATION TO FINISH. ${NC}"
-		fi
+	else
+		echo -e "${RED} ---> WAITING FOR ${OUT_NAME} MODELING TO FINISH. ${NC}"
+		#echo -e "${RED} ---> WAITING FOR ${OUT_NAME} RELAXATION TO FINISH. ${NC}"
+	fi
 else
 	echo -e "${RED} ---> WAITING FOR ${OUT_NAME} MSA TO FINISH. ${NC}"
 fi
