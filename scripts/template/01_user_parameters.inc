@@ -4,7 +4,9 @@ source ../../02_PATHS.inc
 source ../../01_source.inc
 source ./00_user_parameters.inc
 
-if [ "$RUN" = "SCAN" ]; then source ./target.inc; fi
+#if [ "$RUN" = "MATRIX" ]; then source ./target.lst; fi
+#if [ "$RUN" = "MATRIX" ]; then source ${LOC_SCRIPTS}/runs/${OUT_NAME}/target.lst; fi
+if [ "$RUN" = "MATRIX" ]; then TARGET_LST_FILE=./target.lst; fi
 
 ## PRESET SETTINGS #####################################################
 ### run preset, note this is different from model_preset defined below
