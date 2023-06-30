@@ -88,11 +88,11 @@ if [ "$CONTINUE" = "TRUE" ]; then
 		if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
 			LENGTH=$(calculate_setup_aa_length "$LOC_FASTA" "$LOC_FEATURES" "$STOICHIOMETRY")
 			if [ "$LENGTH" -lt 1000 ]; then
-        			#JOBID1=$(sbatch --parsable script_model_all.sh)
+        			JOBID1=$(sbatch --parsable script_model_all.sh)
         			echo -e "${RED} ---> ${JOBID1} (PRED1-5) ${NC}"
 			else
         			for i in {1..5}; do
-           				# JOBID1=$(sbatch --parsable "script_model_${i}.sh")
+           				JOBID1=$(sbatch --parsable "script_model_${i}.sh")
            				echo -e "${RED} ---> ${JOBID1} (PRED${i}) ${NC}"
         			done
 			fi
