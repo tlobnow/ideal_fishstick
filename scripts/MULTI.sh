@@ -42,6 +42,7 @@ FILE=$1
 CONTINUE=FALSE # BY DEFAULT FALSE, FIRST CHECK FOR MSA
 source ./02_PATHS.inc
 source ./01_source.inc
+source ./calculate_setup_aa_length
 
 # Check if MSA needs to be run (starts job if necessary)
 source ./MSA.sh
@@ -53,7 +54,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 	[ -f ${LOC_SCRIPTS}/runs/${FILE} ] || cp -r ${LOC_SCRIPTS}/template ${LOC_SCRIPTS}/runs/${FILE}
 
 	### ENTER SCRIPTS FOLDER
-    cd ${LOC_SCRIPTS}/runs/${FILE}
+	cd ${LOC_SCRIPTS}/runs/${FILE}
 
 	### REMOVE DUPLICATE TEMPLATE FOLDER IF FOUND
 	if [ -d ${LOC_SCRIPTS}/runs/${FILE}/template ]; then  rm -Rf ${LOC_SCRIPTS}/runs/${FILE}/template; fi
@@ -61,40 +62,58 @@ if [ "$CONTINUE" = "TRUE" ]; then
 	### SET FILE NAME IN USER PARAMETERS
 	echo FILE=${FILE}  > 00_user_parameters.inc
 
-    ### SET TARGET STOICHIOMETRY
-    echo $STOICHIOMETRY 300 ${OUT_NAME} > target.lst
+	### SET TARGET STOICHIOMETRY
+	echo $STOICHIOMETRY 300 ${OUT_NAME} > target.lst
 
-	### CHECK FOR OUTPUT_FOLDER EXISTENCE
-	#### IF IT'S MISSING, TRY TO RUN FULL PIPELINE IN ONE GO (ALL MODELS + RLX)
+	### ASSESS THE CURRENT STATUS OF MODEL FILES:
+        cd ${LOC_OUT} 2>/dev/null # the 2>/dev/null just means that we ignore the error messages (e.g. cannot access folder, list stuff, ..)
 
-	#if [ -f ${LOC_OUT} ]; then
+	# FIND AND REMOVE PICKLE FILES IN OUTPUT FOLDER (HUGE + USELESS FOR US)
+        find ${LOC_OUT} 2>/dev/null -name \*.pkl -delete
+        # COUNT THE FILES INSIDE THE LOC_OUT FOLDER - WHAT WAS ALREADY CREATED FOR EACH OF THE 5 MODELS??
+        # HOW MANY MODELS ARE RELAXED AND CORRECTLY RENAMED?
+        OUT_RLX_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^relaxed_${OUT_NAME}_model_* | wc -l`
+        # HOW MANY MODELS HAVE RUN SUCCESSFULLY AND HAVE BEEN RENAMED ALREADY?
+        OUT_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^${OUT_NAME}_model_* | wc -l`
+        # HOW MANY MODELS HAVE RUN SUCCESSFULLY BUT ARE IN THE INITIAL STATE?
+        MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^model_* | wc -l`
+        # IF A DIRECTORY NAMED UNRLXD EXISTS AND IT'S NOT EMPTY -> HOW MANY RENAMED MODEL FILES ARE IN THERE ALREADY?
+        [ -d ${LOC_OUT}/UNRLXD 2>/dev/null ] && MOVED_OUT_MODEL_COUNT=`ls ${LOC_OUT}/UNRLXD | grep ^${OUT_NAME}_model_* | wc -l` || MOVED_OUT_MODEL_COUNT=0
 
-		### ASSESS THE CURRENT STATUS OF MODEL FILES:
-		cd ${LOC_OUT} 2>/dev/null # the 2>/dev/null just means that we ignore the error messages (e.g. cannot access folder, list stuff, ..)
+	if [[ ($OUT_RLX_MODEL_COUNT -eq 0 ) && ( $MODEL_COUNT -eq 0 ) && ( $OUT_MODEL_COUNT -eq 0 ) ]] ; then
+		if [ $EXTENDED_VIEW = TRUE ]; then
+			echo "(2) ---> ALL PREDICTIONS MISSING!"
+		fi
 
+		if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
+			LENGTH=$(calculate_setup_aa_length "$LOC_FASTA" "$LOC_FEATURES" "$STOICHIOMETRY")
+			if [ "$LENGTH" -lt 1000 ]; then
+        			#JOBID1=$(sbatch --parsable script_model_all.sh)
+        			echo -e "${RED} ---> ${JOBID1} (PRED1-5) ${NC}"
+			else
+        			for i in {1..5}; do
+           				# JOBID1=$(sbatch --parsable "script_model_${i}.sh")
+           				echo -e "${RED} ---> ${JOBID1} (PRED${i}) ${NC}"
+        			done
+			fi
+
+                else
+			echo -e "${RED}(2) NO SUBMISSION OF MODELING JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
+                fi
+		PREDICTION_STATUS="FAIL"
+	else
 		### 5 NEURAL NETWORK MODELS ARE USED - WE LOOP THROUGH 1:5 TO CHECK MODEL PROGRESS
 		for i in {1..5}; do
-			# FIND AND REMOVE PICKLE FILES IN OUTPUT FOLDER (HUGE + USELESS FOR US)
-			find ${LOC_OUT} 2>/dev/null -name \*.pkl -delete
-			# COUNT THE FILES INSIDE THE LOC_OUT FOLDER - WHAT WAS ALREADY CREATED FOR EACH OF THE 5 MODELS??
-			# HOW MANY MODELS ARE RELAXED AND CORRECTLY RENAMED?
-			OUT_RLX_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^relaxed_${OUT_NAME}_model_${i}_* | wc -l`
-			# HOW MANY MODELS HAVE RUN SUCCESSFULLY AND HAVE BEEN RENAMED ALREADY?
-			OUT_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^${OUT_NAME}_model_${i}_* | wc -l`
-			# HOW MANY MODELS HAVE RUN SUCCESSFULLY BUT ARE IN THE INITIAL STATE?
-			MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^model_${i}_* | wc -l`
-			# IF A DIRECTORY NAMED UNRLXD EXISTS AND IT'S NOT EMPTY -> HOW MANY RENAMED MODEL FILES ARE IN THERE ALREADY?
-			[ -d ${LOC_OUT}/UNRLXD 2>/dev/null ] && MOVED_OUT_MODEL_COUNT=`ls ${LOC_OUT}/UNRLXD | grep ^${OUT_NAME}_model_${i}_* | wc -l` || MOVED_OUT_MODEL_COUNT=0
 
 			# IF THE MODEL OR THE RELAXED FILE OF THE MODEL EXIST IN THE OUPUT FOLDER --> SETS PREDICTION_STATUS TO PASS
-			if [[ ($OUT_RLX_MODEL_COUNT -eq 1) || ( $MODEL_COUNT -eq 1 ) || ( $OUT_MODEL_COUNT -eq 1 ) ]] ; then
+			if [[ ($OUT_RLX_MODEL_COUNT -eq 1 ) || ( $MODEL_COUNT -eq 1 ) || ( $OUT_MODEL_COUNT -eq 1 ) ]] ; then
 				if [ $EXTENDED_VIEW = TRUE ]; then
 					echo "(2) ---> PREDICTION ${i} OF ${OUT_NAME} DONE."
 				fi
 				PREDICTION_STATUS="PASS"
 
 			# CHECK IF ANY OF THE MODELS HAVE RUN MORE THAN ONCE! GIVES A WARNING IF SO	
-			elif [[ ($OUT_RLX_MODEL_COUNT -gt 1) || ( $MODEL_COUNT -gt 1 ) || ( $OUT_MODEL_COUNT -gt 1 ) ]] ; then
+			elif [[ ($OUT_RLX_MODEL_COUNT -gt 1 ) || ( $MODEL_COUNT -gt 1 ) || ( $OUT_MODEL_COUNT -gt 1 ) ]] ; then
 				echo -e "${YELLOW}(2) MODEL ${i} WAS PREDICTED MORE THAN ONCE. PLEASE CHECK FOLDER BEFORE JOINING SLURMS [PREDICTION_STATUS = PASS]${NC}"
 				PREDICTION_STATUS="PASS"
 
@@ -111,10 +130,8 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				cd ${LOC_SCRIPTS}/runs/${FILE}
 				grep --include=slurm\* -rzl . -e "DUE TO TIME LIMIT" 
 				TIME_LIMIT_EVAL=$?	
-
 				grep --include=slurm\* -rzl . -e "model_${i}.*x not in list"
 				X_NOT_IN_LIST_EVAL=$?
-				
 				grep --include=slurm\* -rzl . -e "model_${i}.*Out of memory"
 				OOM_EVAL=$?
 
@@ -145,11 +162,10 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				fi
 				PREDICTION_STATUS="FAIL"
 			fi
-				
 			# IF ANY PREDICTION_STATUS WAS SET TO PASS, THE TICKER GOES UP BY ONE
 			if [ $PREDICTION_STATUS = "PASS" ]; then let PREDICTION_TICKER++ ; fi
-
 		done
+	fi
 
 	### STATUS OF THE RELAXED FILES
 	if [ $PREDICTION_TICKER -ge 5 ]; then
@@ -288,6 +304,8 @@ if [ "$CONTINUE" = "TRUE" ]; then
 			[ -f ${OUT_NAME}_ranking_model_${i}.json ] &&  mv ${OUT_NAME}_ranking_model_${i}.json ${LOC_OUT}/JSON/${OUT_NAME}_ranking_model_${i}.json
 		done
 
+		[ -f ranking_all_* ] && mv ranking_all* ${LOC_OUT}/JSON/${OUT_NAME}_ranking_all.json
+
 		cd ${LOC_OUT}
 		echo "extracting JSON and converting to CSV file"
 		Rscript --vanilla ${LOC_SCRIPTS}/Rscripts/extract2csv.R ${LOC_OUT} ${OUT_NAME} ${RUN}
@@ -296,12 +314,13 @@ if [ "$CONTINUE" = "TRUE" ]; then
 		[ -f checkpoint ] && rm -r checkpoint
 
 		# COPY THE FOLDER INTO TRANSFERGIT REPO
-		#cp -r ${LOC_OUT}/ ~/transferGit/
+		cp -r ${LOC_OUT}/ ~/transferGit/
+
 
 		if [ $EXTENDED_VIEW = TRUE ]; then
 			echo "(4) R PREPARATION OF ${OUT_NAME} FINISHED SUCCESSFULLY."
 			echo "(5) PIPELINE OF ${OUT_NAME} FINISHED SUCCESSFULLY."
-			#echo "(6) COPIED FOLDER TO ~/transferGit/"
+			echo "(6) COPIED FOLDER TO ~/transferGit/"
 			ls ${LOC_OUT}
 		fi
 
