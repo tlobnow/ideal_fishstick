@@ -87,7 +87,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 
 		if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
 			LENGTH=$(calculate_setup_aa_length "$LOC_FASTA" "$LOC_FEATURES" "$STOICHIOMETRY")
-			if [ "$LENGTH" -lt 1000 ]; then
+			if [ "$LENGTH" -lt 2000 ]; then
         			JOBID1=$(sbatch --parsable script_model_all.sh)
         			echo -e "${RED} ---> ${JOBID1} (PRED1-5) ${NC}"
 			else
@@ -98,7 +98,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 			fi
 
                 else
-			echo -e "${RED}(2) NO SUBMISSION OF MODELING JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
+			echo -e "${RED}(2) NOT SUBMITTING NEW JOBS FOR ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
                 fi
 		PREDICTION_STATUS="FAIL"
 	else
@@ -114,7 +114,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 
 			# CHECK IF ANY OF THE MODELS HAVE RUN MORE THAN ONCE! GIVES A WARNING IF SO	
 			elif [[ ($OUT_RLX_MODEL_COUNT -gt 1 ) || ( $MODEL_COUNT -gt 1 ) || ( $OUT_MODEL_COUNT -gt 1 ) ]] ; then
-				echo -e "${YELLOW}(2) MODEL ${i} WAS PREDICTED MORE THAN ONCE. PLEASE CHECK FOLDER BEFORE JOINING SLURMS [PREDICTION_STATUS = PASS]${NC}"
+				echo -e "${YELLOW} (2) MODEL ${i} OF ${OUT_NAME} WAS PREDICTED MORE THAN ONCE. PLEASE CHECK FOLDER BEFORE JOINING SLURMS [PREDICTION_STATUS = PASS]${NC}"
 				PREDICTION_STATUS="PASS"
 
 			# IF THE UNRLXD FOLDER WAS ALREADY CREATED, CHECK THE CONTENT AND MOVE FILES BACK INTO MAIN FILE FOLDER
@@ -145,19 +145,19 @@ if [ "$CONTINUE" = "TRUE" ]; then
 							JOBID1=$(sbatch --parsable script_model_${i}.sh)
 							echo -e "${RED} ---> ${JOBID1} (PRED ${i})${NC}"
 						else
-							echo -e "${RED}(2) NO SUBMISSION OF MODELING JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
+							echo -e "${RED} (2) CANNOT START PRED ${i} OF ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
 						fi
 					else
 						echo -e "${BLUE}(2) X NOT IN LIST FAIL OF ${OUT_NAME} MODEL ${i}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
 					fi
 				elif [ $OOM_EVAL = 0 ]; then
-					echo -e "${BLUE}(2) OUT OF MEMORY FAIL OF  ${OUT_NAME} MODEL ${i}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
+					echo -e "${BLUE}(2) OUT OF MEMORY FAIL OF ${OUT_NAME} MODEL ${i}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
 				else
 					if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
 						JOBID1=$(sbatch --parsable script_model_${i}.sh)
 						echo -e "${RED} ---> ${JOBID1} (PRED ${i})${NC}"
 					else
-						echo -e "${RED}(2) NO SUBMISSION OF MODELING JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
+						echo -e "${RED} (2) CANNOT START PRED ${i} OF ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
 					fi
 				fi
 				PREDICTION_STATUS="FAIL"
@@ -189,7 +189,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 
 			# PARTIAL RELAXATION, BUT NOT FORCED TO RESTART 
 			if [ $FORCE_RLX = FALSE ]; then
-				echo -e "${YELLOW}(3) RELAXATION OF ${OUT_NAME} WAS ATTEMPTED, BUT HAS NOT FINISHED. SET FORCE_RLX = TRUE IF NECESSARY.${NC}"
+				echo -e "${YELLOW} (3) RELAXATION OF ${OUT_NAME} WAS ATTEMPTED, BUT HAS NOT FINISHED. SET FORCE_RLX = TRUE IF NECESSARY.${NC}"
 				RELAXATION_STATUS="PASS"
 
 			# FORCES TO REMOVE PRE-EXISTING RELAXED FILES AND START NEW RELAXATION
@@ -204,7 +204,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 					#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
 					echo "NO RELAXATION STEP FOR NOW."
 				else
-					#echo -e "${RED}(3) NO SUBMISSION OF RELAXATION JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
+					#echo -e "${RED}(3) CANNOT START RLX OF ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
 					echo "NO RELAXATION STEP FOR NOW."
 				fi
 				RELAXATION_STATUS="FAIL"
@@ -218,7 +218,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
 				echo "NO RELAXATION STEP FOR NOW."
 			else
-				#echo -e "${RED}(3) NO SUBMISSION OF RELAXATION JOBS - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
+				#echo -e "${RED}(3) CANNOT START RLX OF ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
 				echo "NO RELAXATION STEP FOR NOW."
 
 			fi
