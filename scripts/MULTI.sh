@@ -65,8 +65,9 @@ if [ "$CONTINUE" = "TRUE" ]; then
 	### SET TARGET STOICHIOMETRY
 	echo $STOICHIOMETRY 300 ${OUT_NAME} > target.lst
 
-	### ASSESS THE CURRENT STATUS OF MODEL FILES:
         cd ${LOC_OUT} 2>/dev/null # the 2>/dev/null just means that we ignore the error messages (e.g. cannot access folder, list stuff, ..)
+
+        ### ASSESS THE CURRENT STATUS OF MODEL FILES ***************************************************************************************
 
 	# FIND AND REMOVE PICKLE FILES IN OUTPUT FOLDER (HUGE + USELESS FOR US)
         find ${LOC_OUT} 2>/dev/null -name \*.pkl -delete
@@ -80,7 +81,11 @@ if [ "$CONTINUE" = "TRUE" ]; then
         # IF A DIRECTORY NAMED UNRLXD EXISTS AND IT'S NOT EMPTY -> HOW MANY RENAMED MODEL FILES ARE IN THERE ALREADY?
         [ -d ${LOC_OUT}/UNRLXD 2>/dev/null ] && MOVED_OUT_MODEL_COUNT=`ls ${LOC_OUT}/UNRLXD | grep ^${OUT_NAME}_model_* | wc -l` || MOVED_OUT_MODEL_COUNT=0
 
-	if [[ ($OUT_RLX_MODEL_COUNT -eq 0 ) && ( $MODEL_COUNT -eq 0 ) && ( $OUT_MODEL_COUNT -eq 0 ) ]] ; then
+
+	cd ${LOC_SCRIPTS}/runs/${FILE}
+
+	### CHECK MODEL EXISTENCE - IF 0 ARE FOUND, START ALL 5 MODELS IN INDIVIDUAL JOBS OR ALL 5 IN 1 JOB (IF CONSTRUCT SIZE BELOW 2000aa)
+	if [[ ($OUT_RLX_MODEL_COUNT -eq 0 ) && ( $MODEL_COUNT -eq 0 ) && ( $OUT_MODEL_COUNT -eq 0 ) && ( $MOVED_OUT_MODEL_COUNT -eq 0 ) ]] ; then
 		if [ $EXTENDED_VIEW = TRUE ]; then
 			echo "(2) ---> ALL PREDICTIONS MISSING!"
 		fi
@@ -88,32 +93,46 @@ if [ "$CONTINUE" = "TRUE" ]; then
 		if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
 			LENGTH=$(calculate_setup_aa_length "$LOC_FASTA" "$LOC_FEATURES" "$STOICHIOMETRY")
 			if [ "$LENGTH" -lt 2000 ]; then
-        			JOBID1=$(sbatch --parsable script_model_all.sh)
+        			#JOBID1=$(sbatch --parsable script_model_all.sh)
         			echo -e "${RED} ---> ${JOBID1} (PRED1-5) ${NC}"
 			else
         			for i in {1..5}; do
-           				JOBID1=$(sbatch --parsable "script_model_${i}.sh")
+           				#JOBID1=$(sbatch --parsable "script_model_${i}.sh")
            				echo -e "${RED} ---> ${JOBID1} (PRED${i}) ${NC}"
         			done
 			fi
-
                 else
 			echo -e "${RED}(2) NOT SUBMITTING NEW JOBS FOR ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
                 fi
 		PREDICTION_STATUS="FAIL"
 	else
 		### 5 NEURAL NETWORK MODELS ARE USED - WE LOOP THROUGH 1:5 TO CHECK MODEL PROGRESS
+
+		cd ${LOC_OUT}
+
 		for i in {1..5}; do
+			# COUNT THE FILES INSIDE THE LOC_OUT FOLDER - WHAT WAS ALREADY CREATED FOR EACH OF THE 5 MODELS??
+			# FIND AND REMOVE PICKLE FILES IN OUTPUT FOLDER (HUGE + USELESS FOR US)
+			find ${LOC_OUT} 2>/dev/null -name \*.pkl -delete
+			# COUNT THE FILES INSIDE THE LOC_OUT FOLDER - WHAT WAS ALREADY CREATED FOR EACH OF THE 5 MODELS??
+			# HOW MANY MODELS ARE RELAXED AND CORRECTLY RENAMED?
+			OUT_RLX_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^relaxed_${OUT_NAME}_model_${i}_* | wc -l`
+			# HOW MANY MODELS HAVE RUN SUCCESSFULLY AND HAVE BEEN RENAMED ALREADY?
+			OUT_MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^${OUT_NAME}_model_${i}_* | wc -l`
+			# HOW MANY MODELS HAVE RUN SUCCESSFULLY BUT ARE IN THE INITIAL STATE?
+			MODEL_COUNT=`ls ${LOC_OUT} 2>/dev/null | grep ^model_${i}_* | wc -l`
+			# IF A DIRECTORY NAMED UNRLXD EXISTS AND IT'S NOT EMPTY -> HOW MANY RENAMED MODEL FILES ARE IN THERE ALREADY?
+			[ -d ${LOC_OUT}/UNRLXD 2>/dev/null ] && MOVED_OUT_MODEL_COUNT=`ls ${LOC_OUT}/UNRLXD | grep ^${OUT_NAME}_model_${i}_* | wc -l` || MOVED_OUT_MODEL_COUNT=0
 
 			# IF THE MODEL OR THE RELAXED FILE OF THE MODEL EXIST IN THE OUPUT FOLDER --> SETS PREDICTION_STATUS TO PASS
-			if [[ ($OUT_RLX_MODEL_COUNT -eq 1 ) || ( $MODEL_COUNT -eq 1 ) || ( $OUT_MODEL_COUNT -eq 1 ) ]] ; then
+			if [[ ($OUT_RLX_MODEL_COUNT -eq 1 ) || ( $MODEL_COUNT -eq 1 ) || ( $OUT_MODEL_COUNT -eq 1 ) || ( $MOVED_OUT_MODEL_COUNT -eq 1 ) ]] ; then
 				if [ $EXTENDED_VIEW = TRUE ]; then
 					echo "(2) ---> PREDICTION ${i} OF ${OUT_NAME} DONE."
 				fi
 				PREDICTION_STATUS="PASS"
 
-			# CHECK IF ANY OF THE MODELS HAVE RUN MORE THAN ONCE! GIVES A WARNING IF SO	
-			elif [[ ($OUT_RLX_MODEL_COUNT -gt 1 ) || ( $MODEL_COUNT -gt 1 ) || ( $OUT_MODEL_COUNT -gt 1 ) ]] ; then
+			# CHECK IF ANY OF THE MODELS HAVE RUN MORE THAN ONCE! GIVES A WARNING IF SO
+			elif [[ ($OUT_RLX_MODEL_COUNT -gt 1 ) || ( $MODEL_COUNT -gt 1 ) || ( $OUT_MODEL_COUNT -gt 1 ) || ( $MOVED_OUT_MODEL_COUNT -gt 1 ) ]] ; then
 				echo -e "${YELLOW} (2) MODEL ${i} OF ${OUT_NAME} WAS PREDICTED MORE THAN ONCE. PLEASE CHECK FOLDER BEFORE JOINING SLURMS [PREDICTION_STATUS = PASS]${NC}"
 				PREDICTION_STATUS="PASS"
 
@@ -128,8 +147,8 @@ if [ "$CONTINUE" = "TRUE" ]; then
 			# LIKELY NO MODEL CREATED UNTIL NOW -> CHECK FOR TIME LIMIT FAILS OR START NEW MODELING JOB
 			else
 				cd ${LOC_SCRIPTS}/runs/${FILE}
-				grep --include=slurm\* -rzl . -e "DUE TO TIME LIMIT" 
-				TIME_LIMIT_EVAL=$?	
+				grep --include=slurm\* -rzl . -e "DUE TO TIME LIMIT"
+				TIME_LIMIT_EVAL=$?
 				grep --include=slurm\* -rzl . -e "model_${i}.*x not in list"
 				X_NOT_IN_LIST_EVAL=$?
 				grep --include=slurm\* -rzl . -e "model_${i}.*Out of memory"
@@ -142,7 +161,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				elif [ $X_NOT_IN_LIST_EVAL = 0 ]; then
 					if [ $FORCE_PRED = "TRUE" ]; then
 						if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
-							JOBID1=$(sbatch --parsable script_model_${i}.sh)
+							#JOBID1=$(sbatch --parsable script_model_${i}.sh)
 							echo -e "${RED} ---> ${JOBID1} (PRED ${i})${NC}"
 						else
 							echo -e "${RED} (2) CANNOT START PRED ${i} OF ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
@@ -154,7 +173,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 					echo -e "${BLUE}(2) OUT OF MEMORY FAIL OF ${OUT_NAME} MODEL ${i}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
 				else
 					if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
-						JOBID1=$(sbatch --parsable script_model_${i}.sh)
+						#JOBID1=$(sbatch --parsable script_model_${i}.sh)
 						echo -e "${RED} ---> ${JOBID1} (PRED ${i})${NC}"
 					else
 						echo -e "${RED} (2) CANNOT START PRED ${i} OF ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
@@ -200,7 +219,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				# START NEW RELAXATION
 				cd ${LOC_SCRIPTS}/runs/${FILE}
 				if [ $MODE -eq 1 -o $MODE -eq 5 ]; then
-					#JOBID1=$(sbatch --parsable script_relaxation.sh)
+					##JOBID1=$(sbatch --parsable script_relaxation.sh)
 					#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
 					echo "NO RELAXATION STEP FOR NOW."
 				else
@@ -214,7 +233,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 			# START NEW RELAXATION
 			cd ${LOC_SCRIPTS}/runs/${FILE}
 			if [ $MODE -eq 1 -o $MODE -eq 5 ]; then
-				#JOBID1=$(sbatch --parsable script_relaxation.sh)
+				##JOBID1=$(sbatch --parsable script_relaxation.sh)
 				#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
 				echo "NO RELAXATION STEP FOR NOW."
 			else
@@ -259,7 +278,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				# START NEW RELAXATION
 				cd ${LOC_SCRIPTS}/runs/${FILE}
 				if [ $MODE -eq 1 -o $MODE -eq 5 ]; then
-					#jobid1=$(sbatch --parsable script_relaxation.sh)
+					##JOBID1=$(sbatch --parsable script_relaxation.sh)
 					#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
 					echo "NO RELAXATION STEP FOR NOW."
 				else
