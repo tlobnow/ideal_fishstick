@@ -93,11 +93,11 @@ if [ "$CONTINUE" = "TRUE" ]; then
 		if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
 			LENGTH=$(calculate_setup_aa_length "$LOC_FASTA" "$LOC_FEATURES" "$STOICHIOMETRY")
 			if [ "$LENGTH" -lt 2000 ]; then
-        			#JOBID1=$(sbatch --parsable script_model_all.sh)
+        			JOBID1=$(sbatch --parsable script_model_all.sh)
         			echo -e "${RED} ---> ${JOBID1} (PRED1-5) ${NC}"
 			else
         			for i in {1..5}; do
-           				#JOBID1=$(sbatch --parsable "script_model_${i}.sh")
+           				JOBID1=$(sbatch --parsable "script_model_${i}.sh")
            				echo -e "${RED} ---> ${JOBID1} (PRED${i}) ${NC}"
         			done
 			fi
@@ -161,7 +161,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				elif [ $X_NOT_IN_LIST_EVAL = 0 ]; then
 					if [ $FORCE_PRED = "TRUE" ]; then
 						if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
-							#JOBID1=$(sbatch --parsable script_model_${i}.sh)
+							JOBID1=$(sbatch --parsable script_model_${i}.sh)
 							echo -e "${RED} ---> ${JOBID1} (PRED ${i})${NC}"
 						else
 							echo -e "${RED} (2) CANNOT START PRED ${i} OF ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
@@ -173,7 +173,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 					echo -e "${BLUE}(2) OUT OF MEMORY FAIL OF ${OUT_NAME} MODEL ${i}! WILL NOT START A NEW PREDICTION ROUND... ${NC}"
 				else
 					if [ $MODE -eq 1 -o $MODE -eq 4 ]; then
-						#JOBID1=$(sbatch --parsable script_model_${i}.sh)
+						JOBID1=$(sbatch --parsable script_model_${i}.sh)
 						echo -e "${RED} ---> ${JOBID1} (PRED ${i})${NC}"
 					else
 						echo -e "${RED} (2) CANNOT START PRED ${i} OF ${OUT_NAME} - CHANGE MODE TO ALLOW NEW SUBMISSIONS.${NC}"
@@ -219,7 +219,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				# START NEW RELAXATION
 				cd ${LOC_SCRIPTS}/runs/${FILE}
 				if [ $MODE -eq 1 -o $MODE -eq 5 ]; then
-					##JOBID1=$(sbatch --parsable script_relaxation.sh)
+					#JOBID1=$(sbatch --parsable script_relaxation.sh)
 					#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
 					echo "NO RELAXATION STEP FOR NOW."
 				else
@@ -233,7 +233,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 			# START NEW RELAXATION
 			cd ${LOC_SCRIPTS}/runs/${FILE}
 			if [ $MODE -eq 1 -o $MODE -eq 5 ]; then
-				##JOBID1=$(sbatch --parsable script_relaxation.sh)
+				#JOBID1=$(sbatch --parsable script_relaxation.sh)
 				#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
 				echo "NO RELAXATION STEP FOR NOW."
 			else
@@ -278,7 +278,7 @@ if [ "$CONTINUE" = "TRUE" ]; then
 				# START NEW RELAXATION
 				cd ${LOC_SCRIPTS}/runs/${FILE}
 				if [ $MODE -eq 1 -o $MODE -eq 5 ]; then
-					##JOBID1=$(sbatch --parsable script_relaxation.sh)
+					#JOBID1=$(sbatch --parsable script_relaxation.sh)
 					#echo -e "${RED} ---> ${JOBID1} (RLX ALL) ${NC}"
 					echo "NO RELAXATION STEP FOR NOW."
 				else
